@@ -1,0 +1,11 @@
+{
+  "name": "envcheck",
+  "slug": "2026-07-05_envcheck",
+  "one_liner": "Drift and secret checks for dotenv files: template<->env drift, syntax and encoding diagnostics, and known-prefix credential detection.",
+  "problem": "Leaked .env files are the #1 documented cause of large-scale credential-harvest incidents (Palo Alto Networks Unit 42 2024), while .env.example / .env drift keeps producing production outages caught only at request time. Existing tools are either heavy Rust binaries, hosted services, or Node/Ruby-specific. A small, zero-dep, Python-native linter that runs in CI and as a pre-commit hook is the missing primitive.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install .",
+  "deps": [],
+  "license": "MIT"
+}
