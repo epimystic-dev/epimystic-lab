@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jsonlsample"
+version = "0.1.0"
+description = "Deterministic reservoir + stratified + Bernoulli sampling for JSONL streams. Zero dependencies."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+keywords = ["jsonl", "sampling", "reservoir", "stratified", "ndjson", "eval", "ml"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
+]
+
+[project.scripts]
+jsonlsample = "jsonlsample.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/epimystic-dev/epimystic-lab"
+
+[tool.setuptools.packages.find]
+include = ["jsonlsample*"]
