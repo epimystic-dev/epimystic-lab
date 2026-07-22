@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reqcheck"
+version = "0.1.0"
+description = "Offline supply-chain hygiene linter for pip-style requirements files. Zero dependencies."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+keywords = ["pip", "requirements", "linter", "supply-chain", "security", "audit", "hygiene"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.scripts]
+reqcheck = "reqcheck.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/epimystic-dev/epimystic-lab"
+
+[tool.setuptools.packages.find]
+include = ["reqcheck*"]

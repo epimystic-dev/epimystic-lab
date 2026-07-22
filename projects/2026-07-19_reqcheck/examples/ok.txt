@@ -1,0 +1,6 @@
+# reqcheck: clean example
+# Zero findings expected.
+requests==2.31.0
+numpy==1.26.0
+pyyaml==6.0.1
+uvicorn[standard]==0.30.0

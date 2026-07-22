@@ -1,0 +1,11 @@
+{
+  "name": "reqcheck",
+  "slug": "2026-07-19_reqcheck",
+  "one_liner": "Offline supply-chain hygiene linter for pip-style requirements files: pin discipline, hash discipline, typosquat detection, VCS-ref pinning, homograph and trusted-host red flags.",
+  "problem": "AI coding agents and human developers alike routinely install dependencies from pip-style requirements files without pre-flight verification. The recent arXiv paper 2607.15143 ('Setup Complete, Now You Are Compromised', 2026-07-16) frames this pattern as a systematic supply-chain risk vector: install steps proceed with unpinned versions, missing hashes, typosquat-shape names, non-TLS-verified custom indexes, and VCS URLs whose refs float with the remote. reqcheck is the small pre-install linter that answers 'is this manifest hygienic?' entirely offline, in zero-dep Python, so it can run as a pre-commit hook, CI check, or agent tool call BEFORE `pip install` runs. Nine documented rules cover pin discipline (REQ-A001), hash discipline (REQ-A002), typosquat shape via Damerau-Levenshtein against a curated widely-installed-package snapshot (REQ-A003), duplicate declarations (REQ-A004), --trusted-host TLS-bypass (REQ-A005), VCS ref not pinned to a commit SHA (REQ-A006), non-ASCII homograph in name (REQ-A007), editable local install red-flag (REQ-A008), and custom-index informational notice (REQ-A009).",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install .",
+  "deps": [],
+  "license": "MIT"
+}

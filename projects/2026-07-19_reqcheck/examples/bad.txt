@@ -1,0 +1,8 @@
+# reqcheck: fixture with a variety of hygiene issues.
+# Every non-comment line trips at least one rule.
+requsts==1.0
+foo>=1.0
+foo==2.0
+--trusted-host internal.example.com
+git+https://example.com/foo/bar.git@main#egg=bar
+-e ./local-package
