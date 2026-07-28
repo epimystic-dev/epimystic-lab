@@ -81,6 +81,45 @@ class CliFileInput(unittest.TestCase):
         self.assertIn("b.jsonl:1:", r.stderr)
 
 
+class CliHostileInputSurvival(unittest.TestCase):
+    """CLI must never dump a Python traceback on the kinds of bad input a
+    linter is expected to be pointed at (missing paths, non-gzip .gz files,
+    binary garbage). Each of these produced an unhandled traceback before
+    the 2026-07-28 hardening pass."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def tearDown(self):
+        for n in os.listdir(self.tmp):
+            os.remove(os.path.join(self.tmp, n))
+        os.rmdir(self.tmp)
+
+    def test_missing_file_reports_read_error(self):
+        r = _run(os.path.join(self.tmp, "nope.jsonl"))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("read-error", r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+
+    def test_gz_suffix_but_not_gzip_reports_read_error(self):
+        p = os.path.join(self.tmp, "fake.jsonl.gz")
+        with open(p, "wb") as f:
+            f.write(b"this is not a gzip stream")
+        r = _run(p)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("read-error", r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+
+    def test_invalid_utf8_reports_encoding_error(self):
+        p = os.path.join(self.tmp, "bad.jsonl")
+        with open(p, "wb") as f:
+            f.write(b'{"ok":1}\n{"bad":"\xff\xfe"}\n')
+        r = _run(p)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("encoding-error", r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+
+
 class CliFlags(unittest.TestCase):
     def test_homogeneous_flag(self):
         r = _run("-", "--homogeneous", stdin='{"a":1}\n[1,2,3]\n')

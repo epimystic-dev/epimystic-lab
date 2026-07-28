@@ -296,6 +296,98 @@ class PathAndGzip(unittest.TestCase):
         self.assertEqual(issues[0].code, "parse-error")
 
 
+class HostileInputSurvival(unittest.TestCase):
+    """A linter is only useful if it never crashes on its own input. Every
+    test in this class fed the pre-fix core an unhandled traceback (probed
+    via ``probe_hostile.py`` on 2026-07-28); each now yields a structured
+    Issue instead."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_missing_file_yields_read_error(self):
+        issues = list(check_path(os.path.join(self.tmp, "does-not-exist.jsonl")))
+        self.assertEqual(len(issues), 1)
+        self.assertEqual(issues[0].code, "read-error")
+        self.assertEqual(issues[0].line, 0)
+
+    def test_directory_path_yields_read_error(self):
+        subdir = os.path.join(self.tmp, "adir")
+        os.mkdir(subdir)
+        issues = list(check_path(subdir))
+        self.assertEqual(len(issues), 1)
+        self.assertEqual(issues[0].code, "read-error")
+        self.assertEqual(issues[0].line, 0)
+
+    def test_gz_suffix_but_not_gzip_yields_read_error(self):
+        # BadGzipFile is raised at open time on some Python versions and at
+        # first read on others (3.14 defers it). Either way, the linter must
+        # emit exactly one structured read-error rather than a traceback.
+        p = os.path.join(self.tmp, "fake.jsonl.gz")
+        with open(p, "wb") as f:
+            f.write(b"this is not a gzip stream")
+        issues = list(check_path(p))
+        self.assertEqual(len(issues), 1)
+        self.assertEqual(issues[0].code, "read-error")
+
+    def test_invalid_utf8_mid_stream_yields_encoding_error(self):
+        p = os.path.join(self.tmp, "bad.jsonl")
+        # first line is valid; second line has an invalid UTF-8 continuation
+        with open(p, "wb") as f:
+            f.write(b'{"ok":1}\n{"bad":"\xff\xfe"}\n')
+        issues = list(check_path(p))
+        # first line may parse cleanly; the second-line decode fails and stops
+        codes = [i.code for i in issues]
+        self.assertIn("encoding-error", codes)
+        # the encoding error must not be at line 0 (open-time) - decoding
+        # failed AFTER line 1 was consumed, so line >= 1
+        err = next(i for i in issues if i.code == "encoding-error")
+        self.assertGreaterEqual(err.line, 1)
+
+    def test_truncated_gzip_yields_read_error(self):
+        p = os.path.join(self.tmp, "trunc.jsonl.gz")
+        with gzip.open(p, "wt", encoding="utf-8") as g:
+            for i in range(500):
+                g.write(f'{{"i":{i}}}\n')
+        # chop off the tail so the end-of-stream marker is missing
+        with open(p, "rb") as fh:
+            raw = fh.read()
+        with open(p, "wb") as f:
+            f.write(raw[: len(raw) // 2])
+        issues = list(check_path(p))
+        codes = [i.code for i in issues]
+        # A truncated gzip surfaces as read-error at the line where decoding
+        # broke; must not raise EOFError.
+        self.assertIn("read-error", codes)
+
+    def test_readline_encoding_error_from_streaming_source(self):
+        # In-process reproduction that does not depend on file I/O: a stream
+        # whose readline() raises UnicodeDecodeError partway through must be
+        # reported as an ``encoding-error`` Issue, not a traceback.
+        class FailingStream(io.StringIO):
+            def __init__(self):
+                super().__init__()
+                self._first = True
+
+            def readline(self):
+                if self._first:
+                    self._first = False
+                    return '{"a":1}\n'
+                raise UnicodeDecodeError(
+                    "utf-8", b"\xff\xfe", 0, 1, "invalid start byte"
+                )
+
+        issues = list(check_stream(FailingStream()))
+        codes = [i.code for i in issues]
+        self.assertIn("encoding-error", codes)
+        err = next(i for i in issues if i.code == "encoding-error")
+        self.assertEqual(err.line, 2)  # first line succeeded
+
+
 class IssueFormat(unittest.TestCase):
     def test_format_includes_path_line_col_and_code(self):
         i = Issue(line=3, column=7, code="parse-error", message="boom")

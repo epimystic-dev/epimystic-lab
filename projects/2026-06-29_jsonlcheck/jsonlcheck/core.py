@@ -133,13 +133,46 @@ def _open_text(path: PathLike) -> IO[str]:
     return open(p, "rt", encoding="utf-8", newline="")
 
 
+class _ReadError(Exception):
+    """Internal sentinel: a stream read failed after ``lineno`` lines were
+    successfully read. Callers convert this into a structured Issue."""
+
+    def __init__(self, lineno: int, code: str, message: str) -> None:
+        super().__init__(message)
+        self.lineno = lineno
+        self.code = code
+
+
 def iter_lines(stream: IO[str]) -> Iterator[tuple]:
     """Yield (lineno, raw_line_without_terminator, ended_with_newline) tuples.
     The reader treats only LF and CRLF as line terminators. A final line with
-    no terminator is yielded with ended_with_newline=False."""
+    no terminator is yielded with ended_with_newline=False.
+
+    Raises ``_ReadError`` if the underlying stream fails (invalid UTF-8,
+    truncated gzip, I/O error). The lineno on the exception is the number of
+    lines successfully yielded so the caller can report a useful location."""
     lineno = 0
     while True:
-        raw = stream.readline()
+        try:
+            raw = stream.readline()
+        except UnicodeDecodeError as exc:
+            # We opened the file with encoding="utf-8"; invalid bytes surface
+            # here rather than at open. Report the byte offset within the
+            # failing chunk (start relative to the current buffer).
+            raise _ReadError(
+                lineno + 1,
+                "encoding-error",
+                f"invalid UTF-8: {exc.reason} (byte 0x{exc.object[exc.start]:02x} "
+                f"at read offset {exc.start})",
+            ) from exc
+        except EOFError as exc:
+            # gzip raises this when the stream ends before the end-of-stream
+            # marker; treat as truncated input rather than a crash.
+            raise _ReadError(lineno + 1, "read-error", f"truncated input: {exc}") from exc
+        except OSError as exc:
+            # BadGzipFile (subclass of OSError) surfaces mid-stream when the
+            # gzip data is corrupt past the header; also covers general I/O.
+            raise _ReadError(lineno + 1, "read-error", f"read failed: {exc}") from exc
         if not raw:
             return
         lineno += 1
@@ -172,7 +205,20 @@ def check_stream(stream: IO[str], *, options: Optional[Options] = None) -> Itera
         issued += 1
         yield issue
 
-    for lineno, body, ended in iter_lines(stream):
+    line_iter = iter_lines(stream)
+    while True:
+        try:
+            lineno, body, ended = next(line_iter)
+        except StopIteration:
+            break
+        except _ReadError as exc:
+            yield Issue(
+                line=exc.lineno,
+                column=None,
+                code=exc.code,
+                message=str(exc),
+            )
+            return
         saw_any_line = True
         last_ended_with_newline = ended
 
@@ -309,8 +355,26 @@ def check_stream(stream: IO[str], *, options: Optional[Options] = None) -> Itera
 
 
 def check_path(path: PathLike, *, options: Optional[Options] = None) -> Iterator[Issue]:
-    """Open a path (auto-detecting .gz) and yield Issue records."""
-    with _open_text(path) as fh:
+    """Open a path (auto-detecting .gz) and yield Issue records.
+
+    Open-time failures (missing file, directory-as-path, permission denied,
+    non-gzip payload with a ``.gz`` suffix) are surfaced as a single
+    ``read-error`` Issue at line 0 rather than propagating as a traceback -
+    consumers of a linter expect diagnostics, not stack traces."""
+    try:
+        fh = _open_text(path)
+    except OSError as exc:
+        # OSError covers FileNotFoundError, IsADirectoryError,
+        # PermissionError, and gzip.BadGzipFile (raised at open when the
+        # ``.gz`` magic bytes are absent).
+        yield Issue(
+            line=0,
+            column=None,
+            code="read-error",
+            message=f"cannot open {os.fspath(path)}: {exc}",
+        )
+        return
+    with fh:
         yield from check_stream(fh, options=options)
 
 
