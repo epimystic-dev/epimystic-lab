@@ -1,0 +1,11 @@
+{
+  "name": "licensechain",
+  "slug": "2026-07-26_licensechain",
+  "one_liner": "Offline license-chain hygiene linter for AI supply chains: SPDX expression parser + 12 rules that flag missing licenses, incompatible combinations, dropped copyleft obligations, share-alike violations, non-commercial leakage, and use-restriction (RAIL) propagation across dataset -> model -> application manifests.",
+  "problem": "arXiv 2607.20300 ('Don't Trust the Label: License Laundering in AI Supply Chains', 2026-07-23) traced 232,270 dataset->model->application chains and quantified how license obligations silently drop as artifacts flow through the pipeline. The paper's core empirical finding: a large fraction of published AI supply chains propagate a downstream license inconsistent with the upstream (copyleft becomes permissive; share-alike becomes MIT; non-commercial datasets end up in commercial models). licensechain is the small offline linter that answers 'does this chain preserve its upstream obligations?' before it is published. Twelve documented rules cover missing licenses (LIC-001), unknown SPDX ids (LIC-002), parse errors (LIC-003), copyleft-dropped-downstream (LIC-004), notice-not-preserved (LIC-005), share-alike-violated (LIC-006), general incompatibility (LIC-007), unversioned GPL ambiguity (LIC-008), NOASSERTION/NONE (LIC-009), custom LicenseRef- (LIC-010), non-commercial leaked into commercial downstream (LIC-011), and orphan components (LIC-012).",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install .",
+  "deps": [],
+  "license": "MIT"
+}

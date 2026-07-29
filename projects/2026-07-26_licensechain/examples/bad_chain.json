@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "chain": [
+    {
+      "name": "nc-dataset",
+      "role": "dataset",
+      "license": "CC-BY-NC-4.0",
+      "preserves_notices": true
+    },
+    {
+      "name": "sa-corpus",
+      "role": "dataset",
+      "license": "CC-BY-SA-4.0",
+      "preserves_notices": true
+    },
+    {
+      "name": "gpl-lib",
+      "role": "library",
+      "license": "GPL-3.0-only",
+      "preserves_notices": true
+    },
+    {
+      "name": "mystery-lib",
+      "role": "library",
+      "license": "NOASSERTION"
+    },
+    {
+      "name": "trained-model",
+      "role": "model",
+      "license": "Apache-2.0",
+      "trained_on": ["nc-dataset", "sa-corpus"],
+      "uses": ["gpl-lib", "mystery-lib"],
+      "commercial_use": true
+    }
+  ]
+}

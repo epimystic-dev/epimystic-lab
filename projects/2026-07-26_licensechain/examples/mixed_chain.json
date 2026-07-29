@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "chain": [
+    {
+      "name": "public-data",
+      "role": "dataset",
+      "license": "CC0-1.0"
+    },
+    {
+      "name": "reference-corpus",
+      "role": "dataset",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "name": "base-model",
+      "role": "model",
+      "license": "Apache-2.0",
+      "preserves_notices": true,
+      "trained_on": ["public-data", "reference-corpus"]
+    },
+    {
+      "name": "app",
+      "role": "application",
+      "license": "MIT OR Apache-2.0",
+      "preserves_notices": true,
+      "uses": ["base-model"]
+    }
+  ]
+}

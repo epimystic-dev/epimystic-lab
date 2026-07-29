@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "chain": [
+    {
+      "name": "wiki-corpus",
+      "role": "dataset",
+      "license": "CC-BY-SA-4.0",
+      "preserves_notices": true,
+      "notes": "Wikipedia-derived public text corpus."
+    },
+    {
+      "name": "base-tokenizer",
+      "role": "library",
+      "license": "Apache-2.0",
+      "preserves_notices": true
+    },
+    {
+      "name": "base-model",
+      "role": "model",
+      "license": "CC-BY-SA-4.0",
+      "preserves_notices": true,
+      "trained_on": ["wiki-corpus"],
+      "uses": ["base-tokenizer"]
+    },
+    {
+      "name": "downstream-app",
+      "role": "application",
+      "license": "CC-BY-SA-4.0",
+      "preserves_notices": true,
+      "uses": ["base-model"]
+    }
+  ]
+}
