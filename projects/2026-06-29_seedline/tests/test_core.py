@@ -8,7 +8,9 @@ from __future__ import annotations
 import os
 import random
 import unittest
+from unittest import mock
 
+import seedline.core as _core
 from seedline import SeedSnapshot, detect, restore, seed_all, seeded, snapshot
 
 
@@ -208,6 +210,104 @@ class TorchOptional(unittest.TestCase):
         with seeded(9):
             torch.rand(5)
 
+        got = torch.rand(3).tolist()
+        self.assertEqual(got, expected)
+
+
+def _fake_import(absent):
+    """Return a stand-in for seedline.core._try_import that pretends the
+    modules named in ``absent`` are not importable, delegating to the real
+    ``_try_import`` for everything else."""
+    real = _core._try_import
+
+    def fake(name):
+        if name in absent:
+            return None
+        return real(name)
+
+    return fake
+
+
+class BackendAbsentFallbacks(unittest.TestCase):
+    """The module docstring promises that when NumPy or PyTorch are not
+    importable the corresponding snapshot fields stay ``None`` and every
+    entry point silently skips them. The optional-backend tests above skip
+    when a backend is absent from the *host* — they never exercise the
+    absent-branch code paths on a machine that does have the backend. These
+    tests patch ``_try_import`` so the absent branches run regardless of the
+    test host's environment."""
+
+    def test_detect_reports_numpy_absent_when_import_fails(self):
+        with mock.patch.object(_core, "_try_import", new=_fake_import({"numpy"})):
+            d = detect()
+        self.assertEqual(d["numpy"], "absent")
+
+    def test_detect_reports_torch_and_cuda_absent_when_import_fails(self):
+        with mock.patch.object(_core, "_try_import", new=_fake_import({"torch"})):
+            d = detect()
+        self.assertEqual(d["torch"], "absent")
+        self.assertEqual(d["torch_cuda"], "absent")
+
+    def test_snapshot_leaves_numpy_field_none_when_numpy_absent(self):
+        with mock.patch.object(_core, "_try_import", new=_fake_import({"numpy"})):
+            snap = snapshot()
+        self.assertIsNone(snap.numpy_random)
+        # The stdlib RNG state must still be captured.
+        self.assertIsNotNone(snap.python_random)
+
+    def test_snapshot_leaves_torch_fields_none_when_torch_absent(self):
+        with mock.patch.object(_core, "_try_import", new=_fake_import({"torch"})):
+            snap = snapshot()
+        self.assertIsNone(snap.torch_cpu)
+        self.assertIsNone(snap.torch_cuda)
+
+    def test_seed_all_returns_snapshot_when_numpy_absent(self):
+        with mock.patch.object(_core, "_try_import", new=_fake_import({"numpy"})):
+            prior = seed_all(1234)
+        self.assertIsInstance(prior, SeedSnapshot)
+        self.assertIsNone(prior.numpy_random)
+
+    def test_seed_all_returns_snapshot_when_torch_absent(self):
+        with mock.patch.object(_core, "_try_import", new=_fake_import({"torch"})):
+            prior = seed_all(1234)
+        self.assertIsInstance(prior, SeedSnapshot)
+        self.assertIsNone(prior.torch_cpu)
+        self.assertIsNone(prior.torch_cuda)
+
+    def test_restore_skips_numpy_when_snapshot_field_is_none(self):
+        """A partial-backend snapshot (captured on a numpy-less host) must not
+        touch numpy state on a host that DOES have numpy — otherwise it would
+        try to feed ``None`` to ``np.random.set_state`` and blow up."""
+        try:
+            import numpy as np
+        except ImportError:
+            self.skipTest("numpy not installed")
+
+        with mock.patch.object(_core, "_try_import", new=_fake_import({"numpy"})):
+            partial = snapshot()
+        self.assertIsNone(partial.numpy_random)
+
+        np.random.seed(4242)
+        expected = np.random.rand(3).tolist()
+        np.random.seed(4242)  # rewind numpy to the same starting point
+        restore(partial)      # must NOT touch numpy state
+        got = np.random.rand(3).tolist()
+        self.assertEqual(got, expected)
+
+    def test_restore_skips_torch_when_snapshot_field_is_none(self):
+        try:
+            import torch
+        except ImportError:
+            self.skipTest("torch not installed")
+
+        with mock.patch.object(_core, "_try_import", new=_fake_import({"torch"})):
+            partial = snapshot()
+        self.assertIsNone(partial.torch_cpu)
+
+        torch.manual_seed(4242)
+        expected = torch.rand(3).tolist()
+        torch.manual_seed(4242)
+        restore(partial)
         got = torch.rand(3).tolist()
         self.assertEqual(got, expected)
 
