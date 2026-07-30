@@ -111,5 +111,57 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(rc, 2)
 
 
+class TestExtraSecretKeyRegexValidation(unittest.TestCase):
+    """Regression: user-supplied bad regexes to --extra-secret-key must not
+    escape as a `re.PatternError` traceback. They must be rejected by argparse
+    with a clean error and SystemExit(2). Each subtest corresponds to a
+    real crash observed against jwtcheck before the fix."""
+
+    def _write_tmp_env(self, content: str) -> str:
+        fd, path = tempfile.mkstemp(suffix=".env")
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
+            f.write(content)
+        self.addCleanup(os.remove, path)
+        return path
+
+    def _assert_argparse_rejects(self, bad_regex: str) -> None:
+        path = self._write_tmp_env("MY_TOKEN=changeme\n")
+        stderr = io.StringIO()
+        # argparse type= failures raise SystemExit(2). The important guarantee
+        # is that re.PatternError does NOT escape.
+        with self.assertRaises(SystemExit) as cm:
+            run(
+                [path, "--extra-secret-key", bad_regex],
+                stdout=io.StringIO(),
+                stderr=stderr,
+            )
+        self.assertEqual(cm.exception.code, 2)
+        # argparse writes the error to real sys.stderr, not our injected one;
+        # asserting on the exit-code + non-traceback behaviour is the load-
+        # bearing contract.
+
+    def test_unterminated_character_set_does_not_traceback(self):
+        # Was: re.PatternError: unterminated character set at position 0
+        self._assert_argparse_rejects("[")
+
+    def test_unterminated_subpattern_does_not_traceback(self):
+        # Was: re.PatternError: missing ), unterminated subpattern at position 0
+        self._assert_argparse_rejects("(unclosed")
+
+    def test_bad_escape_does_not_traceback(self):
+        # Was: re.PatternError: bad escape \p at position 0
+        self._assert_argparse_rejects(r"\p")
+
+    def test_valid_regex_still_accepted(self):
+        # Guardrail: the validator must not over-reject.
+        path = self._write_tmp_env("MY_CUSTOM_TOKEN=changeme\n")
+        rc = run(
+            [path, "--extra-secret-key", r"^MY_CUSTOM_TOKEN$"],
+            stdout=io.StringIO(),
+            stderr=io.StringIO(),
+        )
+        self.assertEqual(rc, 2)  # recognised as secret + weak default
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import List, Sequence
@@ -23,6 +24,18 @@ from jwtcheck.audit import Finding, audit_file
 _EXIT_OK = 0
 _EXIT_WARN = 1
 _EXIT_ERROR = 2
+
+
+def _regex_arg(value: str) -> str:
+    """argparse type= for --extra-secret-key: rejects invalid regexes with a
+    clean error instead of letting `re.PatternError` traceback out of the CLI."""
+    try:
+        re.compile(value)
+    except re.error as exc:
+        raise argparse.ArgumentTypeError(
+            f"invalid regex {value!r}: {exc}"
+        )
+    return value
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -50,6 +63,7 @@ def _build_parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         metavar="REGEX",
+        type=_regex_arg,
         help=(
             "additional regex pattern for keys that should be treated as JWT "
             "secrets; may be given multiple times"
