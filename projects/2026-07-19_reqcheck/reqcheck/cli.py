@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from typing import Iterable, List, Sequence, TextIO
 
@@ -121,6 +122,13 @@ def main(argv: Sequence[str] | None = None,
             )
             exit_code = max(exit_code, code)
             continue
+        # os.path.isdir short-circuit: on Windows, open() of a directory
+        # raises PermissionError (not IsADirectoryError), so a POSIX-only
+        # IsADirectoryError catch would leak a traceback on Windows.
+        if os.path.isdir(path):
+            stderr.write(f"reqcheck: is a directory: {path}\n")
+            exit_code = max(exit_code, EXIT_ERROR)
+            continue
         try:
             pf, findings = audit_file(path, include_info=args.include_info)
         except FileNotFoundError:
@@ -129,6 +137,17 @@ def main(argv: Sequence[str] | None = None,
             continue
         except IsADirectoryError:
             stderr.write(f"reqcheck: is a directory: {path}\n")
+            exit_code = max(exit_code, EXIT_ERROR)
+            continue
+        except PermissionError:
+            stderr.write(f"reqcheck: permission denied: {path}\n")
+            exit_code = max(exit_code, EXIT_ERROR)
+            continue
+        except UnicodeDecodeError as e:
+            stderr.write(
+                f"reqcheck: not valid UTF-8: {path} "
+                f"(byte {e.start}: {e.reason})\n"
+            )
             exit_code = max(exit_code, EXIT_ERROR)
             continue
         if args.strict:

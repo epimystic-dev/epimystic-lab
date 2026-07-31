@@ -105,6 +105,53 @@ class CliOnFixtureTests(unittest.TestCase):
         self.assertIn(p2, text)
 
 
+class HostileInputTests(unittest.TestCase):
+    """Regression coverage for boundary inputs that previously raised
+    tracebacks out of the CLI. Each test corresponds to a demonstrated
+    pre-fix crash captured by the 2026-07-31 hostile-input probe."""
+
+    def _write_bytes(self, data: bytes) -> str:
+        fd, path = tempfile.mkstemp(suffix=".txt")
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(data)
+        self.addCleanup(os.unlink, path)
+        return path
+
+    def test_directory_path_is_reported_not_traceback(self):
+        # On Windows, open() of a directory raises PermissionError, not
+        # IsADirectoryError; the POSIX-only handler would leak a traceback.
+        d = tempfile.mkdtemp()
+        self.addCleanup(os.rmdir, d)
+        out = io.StringIO()
+        err = io.StringIO()
+        code = main([d], stdout=out, stderr=err)
+        self.assertEqual(code, EXIT_ERROR)
+        self.assertIn("is a directory", err.getvalue())
+        self.assertIn(d, err.getvalue())
+
+    def test_invalid_utf8_is_reported_not_traceback(self):
+        # An 0xff byte in the middle of the file previously bubbled a
+        # UnicodeDecodeError from fh.read().
+        path = self._write_bytes(b"foo==1.0\n\xff\xfe\x00bar==2.0\n")
+        out = io.StringIO()
+        err = io.StringIO()
+        code = main([path], stdout=out, stderr=err)
+        self.assertEqual(code, EXIT_ERROR)
+        self.assertIn("not valid UTF-8", err.getvalue())
+        self.assertIn(path, err.getvalue())
+
+    def test_random_binary_is_reported_not_traceback(self):
+        # A 4 KB blob of random bytes almost always trips utf-8 decoding.
+        # Choose a deterministic non-UTF-8 payload for CI reproducibility.
+        payload = bytes(range(256)) * 16  # 4096 bytes, includes 0xff, 0xfe etc.
+        path = self._write_bytes(payload)
+        out = io.StringIO()
+        err = io.StringIO()
+        code = main([path], stdout=out, stderr=err)
+        self.assertEqual(code, EXIT_ERROR)
+        self.assertIn("not valid UTF-8", err.getvalue())
+
+
 class ExampleFileTests(unittest.TestCase):
     """The example fixtures under examples/ are documented in README; make
     sure they behave the way the README claims."""
