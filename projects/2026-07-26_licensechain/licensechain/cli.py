@@ -66,8 +66,27 @@ def main(argv: Optional[List[str]] = None) -> int:
         # are trustworthy).
         print(f"licensechain: manifest load error: {e}", file=sys.stderr)
         return 2
+    except RecursionError:
+        # Reachable via a hostile JSON payload nested past the interpreter's
+        # recursion limit (json's C decoder falls back to Python at depth).
+        print(
+            "licensechain: manifest is too deeply nested to parse safely",
+            file=sys.stderr,
+        )
+        return 2
 
-    findings = check_chain(chain)
+    try:
+        findings = check_chain(chain)
+    except RecursionError:
+        # Reachable via a pathologically-deep SPDX expression on a
+        # component's `license` field (many chained AND/OR, or hundreds of
+        # nested parentheses).
+        print(
+            "licensechain: analysis exceeded recursion depth "
+            "(a license expression is pathologically nested)",
+            file=sys.stderr,
+        )
+        return 2
 
     if not args.include_info:
         findings = [f for f in findings if f.severity != Severity.INFO]

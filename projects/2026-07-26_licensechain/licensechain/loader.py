@@ -140,26 +140,43 @@ def _validate_component(raw: dict, index: int) -> Component:
 
 
 def _check_acyclic(components: List[Component]) -> None:
+    # Iterative DFS with an explicit stack: recursion-depth on long linear
+    # chains was previously bounded by Python's call-stack limit (~1000), so
+    # a legitimate 5000-component supply chain would crash. Using a heap
+    # stack lifts that ceiling to the process's memory budget.
     idx = {c.name: c for c in components}
     WHITE, GRAY, BLACK = 0, 1, 2
     colors = {c.name: WHITE for c in components}
 
-    def visit(name: str, path: List[str]) -> None:
-        if colors[name] == GRAY:
-            cycle = path[path.index(name):] + [name]
-            raise LoadError(
-                f"chain contains a cycle: {' -> '.join(cycle)}"
-            )
-        if colors[name] == BLACK:
-            return
-        colors[name] = GRAY
-        for up, _kind in idx[name].upstream_edges():
-            visit(up, path + [name])
-        colors[name] = BLACK
-
-    for c in components:
-        if colors[c.name] == WHITE:
-            visit(c.name, [])
+    for start in components:
+        if colors[start.name] != WHITE:
+            continue
+        path: List[str] = [start.name]
+        colors[start.name] = GRAY
+        stack: List[tuple] = [
+            (start.name, iter(u for u, _k in idx[start.name].upstream_edges()))
+        ]
+        while stack:
+            name, it = stack[-1]
+            nxt = next(it, None)
+            if nxt is None:
+                colors[name] = BLACK
+                path.pop()
+                stack.pop()
+                continue
+            c = colors.get(nxt, BLACK)
+            if c == WHITE:
+                colors[nxt] = GRAY
+                path.append(nxt)
+                stack.append(
+                    (nxt, iter(u for u, _k in idx[nxt].upstream_edges()))
+                )
+            elif c == GRAY:
+                i = path.index(nxt)
+                cycle = path[i:] + [nxt]
+                raise LoadError(
+                    f"chain contains a cycle: {' -> '.join(cycle)}"
+                )
 
 
 def _from_dict(data: dict) -> Chain:
@@ -227,10 +244,28 @@ def load_manifest(source) -> Chain:
         if stripped.startswith("{") or stripped.startswith("["):
             text = s
         else:
+            if os.path.isdir(s):
+                # Normalises the directory-as-path case cross-platform:
+                # POSIX raises IsADirectoryError from open(); Windows raises
+                # PermissionError. Either way the user gave us a directory,
+                # not a manifest.
+                raise LoadError(
+                    f"manifest path is a directory, not a file: {s}"
+                )
             if not os.path.exists(s):
                 raise LoadError(f"manifest file not found: {s}")
-            with open(s, "r", encoding="utf-8-sig") as f:
-                text = f.read()
+            try:
+                with open(s, "r", encoding="utf-8-sig") as f:
+                    text = f.read()
+            except PermissionError as e:
+                raise LoadError(
+                    f"permission denied reading manifest: {s}"
+                ) from e
+            except UnicodeDecodeError as e:
+                raise LoadError(
+                    f"manifest is not valid UTF-8: {s} "
+                    f"(byte {e.start}: {e.reason})"
+                ) from e
     else:
         raise LoadError(
             f"unsupported source type {type(source).__name__}: "
