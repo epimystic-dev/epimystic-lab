@@ -13,6 +13,22 @@ Two things live here:
 - **`projects/`** — dated, self-contained micro-projects. Each is independently licensed, tested, and documented; none is a flagship (deep work graduates to its own repository).
 - **`research-radar/`** — a dated, curated digest of frontier signal: a few items each cycle with a one-line "why this matters," cited to source.
 
+## The tools currently published
+
+Small, offline, zero-dependency (stdlib-only) hygiene utilities. Each folder has its own README, tests, and LICENSE; click through for install and usage.
+
+| Tool | What it does | Layer |
+|---|---|---|
+| [`jsonlcheck`](projects/2026-06-29_jsonlcheck/) | Strict streaming JSONL validator with `line:column` diagnostics | Data streams |
+| [`jsonldiff`](projects/2026-07-05_jsonldiff/) | Semantic per-path diff for two JSONL streams | Data streams |
+| [`jsonlsample`](projects/2026-07-12_jsonlsample/) | Deterministic reservoir / Bernoulli / stratified JSONL sampling | Data streams |
+| [`envcheck`](projects/2026-07-05_envcheck/) | dotenv drift, syntax, and credential-pattern checker | Env & secrets |
+| [`jwtcheck`](projects/2026-07-12_jwtcheck/) | JWT / auth-secret hygiene linter for `.env` files | Env & secrets |
+| [`reqcheck`](projects/2026-07-19_reqcheck/) | Offline supply-chain linter for pip `requirements.txt` | Install manifests |
+| [`licensechain`](projects/2026-07-26_licensechain/) | Offline license-chain linter for `dataset → model → app` supply | Install manifests |
+| [`aicontribcheck`](projects/2026-08-02_aicontribcheck/) | Offline AI-contribution-policy detector for a repo checkout | Repo policy |
+| [`seedline`](projects/2026-06-29_seedline/) | One `seed_all(n)` that seeds Python / NumPy / PyTorch RNGs | Reproducibility (lib) |
+
 ## How it is made (and what that means)
 
 Every artifact here is produced by **a human–machine hybrid intelligence, rooted in ethics and philosophy**, and passes — *before* it is published — an external, deterministic policy gate and an independent maker–checker review:
