@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aicontribcheck"
+version = "0.1.0"
+description = "Offline AI-contribution-policy detector for open-source repositories."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+    { name = "epimystic-dev" },
+]
+keywords = [
+    "ai-policy",
+    "ai-contributions",
+    "coding-agents",
+    "compliance",
+    "linter",
+    "pre-commit",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/epimystic-dev/epimystic-lab"
+
+[project.scripts]
+aicontribcheck = "aicontribcheck.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["aicontribcheck*"]
+exclude = ["tests*"]

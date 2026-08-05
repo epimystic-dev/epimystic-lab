@@ -1,0 +1,11 @@
+{
+  "name": "aicontribcheck",
+  "slug": "2026-08-02_aicontribcheck",
+  "one_liner": "Offline AI-contribution-policy detector for open-source repositories: scans CONTRIBUTING / README / AGENTS.md / .github/ policy files for machine-readable statements about whether AI-authored contributions are allowed, banned, or conditional, plus any disclosure/attribution obligations, and emits a structured verdict.",
+  "problem": "arXiv 2607.26819 ('A First Look at Coding Agents' Compliance with AI Contribution Rules in Open-Source Communities', 2026-07-29) finds that coding agents never proactively retrieve contribution rules and cannot refuse contributions in AI-banned repositories without explicit prompts. The missing primitive is a small offline tool that, given a repository checkout, scans a canonical set of policy files and emits a structured verdict (allowed | banned | conditional | unknown | conflict) plus any required disclosures, attribution obligations, and human-review requirements. aicontribcheck is that primitive. Ten documented rules (AICONTRIB-001 through AICONTRIB-010) cover explicit ban, explicit allow, disclosure-required, attribution obligation (DCO / CLA / copyright assignment / signed-off-by), human-review-required, tests-required, named-AI-tool mention (evidence-only), non-commercial licence detected on the LICENSE file, unknown-policy rollup, and cross-file conflict.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install .",
+  "deps": [],
+  "license": "MIT"
+}
