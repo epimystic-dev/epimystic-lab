@@ -115,6 +115,30 @@ def test_thing(seeded_run):
 - **`os.urandom`, `secrets`, and OS-backed RNGs are NOT seedable** and
   `seedline` does not pretend otherwise.
 
+## Example
+
+`examples/demo.py` is a self-contained script that walks the three
+shapes users actually reach for: top-of-program `seed_all`, the
+scoped `seeded()` context manager (which restores prior RNG state on
+exit so the surrounding stream is undisturbed), and `detect()` as a
+test-suite banner. It runs from a fresh clone with no install:
+
+    $ python examples/demo.py
+    backends: {'python': 'present', 'numpy': 'present (2.4.4)', 'torch': 'absent', 'torch_cuda': 'absent', 'hash_seed': 'absent'}
+    seed_all(42) then random.random() -> 0.6394267984578837
+    random.random() outside seeded() -> 0.27502931836911926
+    random.random() inside seeded(0) -> 0.8444218515250481
+    random.random() after seeded() -> 0.22321073814882275
+    random.random() inside seeded(0) again -> 0.8444218515250481
+    demo OK
+
+The `backends` line will vary — NumPy/PyTorch/CUDA are detected at
+call time — but the `random.random()` values are deterministic across
+Python versions and match `seed_all(42)` / `seeded(0)` exactly. The
+"outside seeded()" value between the two `seeded(0)` blocks is
+different from the `inside` values, confirming that `seeded()` did
+not leak its seed into the enclosing stream.
+
 ## Tests
 
 ```

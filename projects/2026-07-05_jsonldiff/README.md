@@ -78,6 +78,34 @@ JSON output (one record per line):
 {"kind":"missing_in_candidate","position":30,"baseline":{"id":"x","v":1}}
 ```
 
+## Example
+
+`examples/baseline.jsonl` and `examples/candidate.jsonl` are two
+three-record eval runs of the same prompts. The candidate has a mix of
+scalar edits, an added field, and a removed field:
+
+    $ python -m jsonldiff examples/baseline.jsonl examples/candidate.jsonl
+    jsonldiff: 7 difference(s)
+      line 1  score: 0.82 -> 0.88
+      line 1  latency_ms: 120 -> 118
+      line 2  latency_ms: 135 -> 132
+      line 2  + note: "reviewed"
+      line 3  score: 0.65 -> 0.7
+      line 3  latency_ms: 128 -> 130
+      line 3  - deprecated_flag: true
+
+Ignoring the volatile `latency_ms` field collapses the noise:
+
+    $ python -m jsonldiff examples/baseline.jsonl examples/candidate.jsonl --ignore latency_ms
+    jsonldiff: 4 difference(s)
+      line 1  score: 0.82 -> 0.88
+      line 2  + note: "reviewed"
+      line 3  score: 0.65 -> 0.7
+      line 3  - deprecated_flag: true
+
+Without `--exit-code`, both invocations return `0` so they compose in a
+CI pipeline. Add `--exit-code` to fail the job when differences remain.
+
 ## Change kinds
 
 | Kind | Meaning |

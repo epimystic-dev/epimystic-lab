@@ -90,6 +90,27 @@ Patterns matched: AWS access keys (`AKIA`/`ASIA`), Google API keys (`AIza`),
 (`sk_live_`), and PEM `PRIVATE KEY` blobs. Patterns are matched by prefix
 shape; the tool does not attempt to identify or attribute a specific vendor.
 
+## Example
+
+`examples/template.env` documents four keys; `examples/local.env`
+introduces three realistic drift patterns — a documented key that
+never made it into the deployed config, a value blanked out, and an
+undocumented feature flag added in production:
+
+    $ python -m envcheck examples/template.env examples/local.env
+    envcheck: 3 issue(s) (D001: 1, D002: 1, D003: 1)
+    examples/template.env:3:0: D001 key 'REDIS_URL' is in template but missing from env
+    examples/local.env:3:0: D003 key 'SESSION_SECRET' is empty in env but the template provides a non-empty example
+    examples/local.env:5:0: D002 key 'FEATURE_FLAG' is in env but not documented in the template
+
+    $ echo $?
+    1
+
+(On Windows the emitted paths will use backslash separators; on POSIX,
+forward slashes.) The fixtures are drift-only by design; secret
+detection is exercised by the test suite so no credential-shaped
+literal ships in `examples/`.
+
 ## Library
 
 ```python

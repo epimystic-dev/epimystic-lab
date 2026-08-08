@@ -1,0 +1,3 @@
+{"id": "case-01", "prompt": "capital of france", "score": 0.88, "latency_ms": 118}
+{"id": "case-02", "prompt": "capital of germany", "score": 0.71, "latency_ms": 132, "note": "reviewed"}
+{"id": "case-03", "prompt": "capital of italy", "score": 0.70, "latency_ms": 130}

@@ -63,6 +63,35 @@ python -m jsonlcheck [paths...] [flags]
 **Exit codes:** `0` (clean or warnings only), `1` (one or more errors),
 `2` (CLI usage error from `argparse`).
 
+## Example
+
+`examples/bad.jsonl` is a five-line fixture designed to trip four
+different rules — one duplicate key, one `NaN` literal, one blank line,
+and no trailing newline at EOF:
+
+    {"id": 1, "label": "cat"}
+    {"id": 2, "id": 3, "label": "dog"}
+    {"id": 4, "score": NaN}
+
+    {"id": 5, "label": "bird"}
+
+Running:
+
+    $ python -m jsonlcheck examples/bad.jsonl
+
+Produces:
+
+    examples/bad.jsonl:2: error: [duplicate-key] duplicate object key: 'id'
+    examples/bad.jsonl:3: error: [nan-inf] value contains non-RFC numeric literal: NaN
+    examples/bad.jsonl:4: error: [blank-line] line is blank or whitespace-only
+    examples/bad.jsonl:5: warning: [no-final-newline] file does not end with a newline
+
+    $ echo $?
+    1
+
+`examples/ok.jsonl` is the same shape without the defects and exits `0`
+with no output.
+
 ## Library
 
 ```python
