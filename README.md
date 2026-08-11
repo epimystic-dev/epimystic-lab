@@ -27,6 +27,7 @@ Small, offline, zero-dependency (stdlib-only) hygiene utilities. Each folder has
 | [`reqcheck`](projects/2026-07-19_reqcheck/) | Offline supply-chain linter for pip `requirements.txt` | Install manifests |
 | [`licensechain`](projects/2026-07-26_licensechain/) | Offline license-chain linter for `dataset → model → app` supply | Install manifests |
 | [`aicontribcheck`](projects/2026-08-02_aicontribcheck/) | Offline AI-contribution-policy detector for a repo checkout | Repo policy |
+| [`skillcheck`](projects/2026-08-09_skillcheck/) | Offline safety linter for agent skill files (SKILL.md / AGENTS.md / skills/ / *.skill.md) | Agent skills |
 | [`seedline`](projects/2026-06-29_seedline/) | One `seed_all(n)` that seeds Python / NumPy / PyTorch RNGs | Reproducibility (lib) |
 
 ## How it is made (and what that means)
