@@ -2,7 +2,7 @@
 
 Offline license-chain hygiene linter for AI supply chains.
 Reads a JSON manifest describing a chain of components (typically
-`dataset → model → application`) and reports missing licenses,
+`dataset -> model -> application`) and reports missing licenses,
 incompatible combinations, dropped copyleft obligations, share-alike
 violations, non-commercial leakage, and RAIL-family use-restriction
 propagation failures.
@@ -20,7 +20,7 @@ a copyleft library's obligations quietly drop when its outputs are
 repackaged; a `NOASSERTION` upstream leaves an entire chain
 unauditable. arXiv 2607.20300 ("Don't Trust the Label: License
 Laundering in AI Supply Chains", 2026-07-23) traced 232,270 published
-`dataset → model → application` chains and quantified the pattern
+`dataset -> model -> application` chains and quantified the pattern
 empirically: a large fraction propagate a downstream license
 inconsistent with the upstream.
 

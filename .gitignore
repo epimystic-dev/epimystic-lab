@@ -1,4 +1,4 @@
-# epimystic-lab — never publish internal pipeline state
+# epimystic-lab - never publish internal pipeline state
 .state/
 *.seen.json
 *.seen.sqlite

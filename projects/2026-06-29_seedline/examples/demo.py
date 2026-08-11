@@ -2,7 +2,7 @@
 
     python examples/demo.py
 
-Works from a fresh clone (no install needed) — the sys.path shim below
+Works from a fresh clone (no install needed) - the sys.path shim below
 puts the sibling package directory on the import path.
 
 Exercises the three shapes users actually reach for: the one-line

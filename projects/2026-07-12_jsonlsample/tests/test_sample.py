@@ -61,7 +61,7 @@ class TestReservoirSample(unittest.TestCase):
         # SD of one sample mean is sqrt(var / k). var of uniform int 0..n-1
         # is (n^2 - 1) / 12 ≈ 83333. SD/mean ≈ sqrt(8333.3) ≈ 91.3, so SE
         # over `trials` trials is 91.3/sqrt(300) ≈ 5.3.
-        # Tolerance of 25 is ~5x SE — very loose to avoid flake.
+        # Tolerance of 25 is ~5x SE - very loose to avoid flake.
         self.assertLess(abs(grand_mean - 499.5), 25.0)
 
 

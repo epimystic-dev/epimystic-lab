@@ -232,7 +232,7 @@ class BackendAbsentFallbacks(unittest.TestCase):
     """The module docstring promises that when NumPy or PyTorch are not
     importable the corresponding snapshot fields stay ``None`` and every
     entry point silently skips them. The optional-backend tests above skip
-    when a backend is absent from the *host* — they never exercise the
+    when a backend is absent from the *host* - they never exercise the
     absent-branch code paths on a machine that does have the backend. These
     tests patch ``_try_import`` so the absent branches run regardless of the
     test host's environment."""
@@ -276,7 +276,7 @@ class BackendAbsentFallbacks(unittest.TestCase):
 
     def test_restore_skips_numpy_when_snapshot_field_is_none(self):
         """A partial-backend snapshot (captured on a numpy-less host) must not
-        touch numpy state on a host that DOES have numpy — otherwise it would
+        touch numpy state on a host that DOES have numpy - otherwise it would
         try to feed ``None`` to ``np.random.set_state`` and blow up."""
         try:
             import numpy as np
@@ -326,7 +326,7 @@ class ReturnValueOfSeedAll(unittest.TestCase):
         prior = seed_all(123)
         # state is now the seeded-123 state; consume.
         random.random()
-        # restore to the prior — i.e. our marker state.
+        # restore to the prior - i.e. our marker state.
         restore(prior)
         self.assertEqual(random.random(), expected)
 

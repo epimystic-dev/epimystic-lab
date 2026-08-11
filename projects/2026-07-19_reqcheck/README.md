@@ -11,7 +11,7 @@ ref is not a commit SHA, non-ASCII characters in package names
 (homograph shape), and editable local installs that look like
 committed-by-accident dev conveniences.
 
-It runs entirely offline. There are no network calls, ever — the
+It runs entirely offline. There are no network calls, ever - the
 typosquat check compares against a small curated static snapshot of
 widely-installed Python packages.
 
@@ -59,9 +59,9 @@ Requires Python 3.8+. No third-party dependencies.
 
 Exit codes:
 
-- `0` — no findings
-- `1` — warnings only (or info if `--include-info`)
-- `2` — at least one error (or any finding under `--strict`)
+- `0` - no findings
+- `1` - warnings only (or info if `--include-info`)
+- `2` - at least one error (or any finding under `--strict`)
 
 ## Example
 
@@ -115,7 +115,7 @@ JSON output for CI:
   `--hash=alg:hex` fragment is present, not whether `alg` is one of
   pip's supported algorithms.
 - **REQ-A003 uses edit-distance shape.** It is a heuristic, not proof
-  of malicious intent — a legitimate fork with a similar name will
+  of malicious intent - a legitimate fork with a similar name will
   also trip it. The suggested action is "verify intent," not "block."
 - **REQ-A006 accepts any hex string of length ≥ 7 as a commit SHA.** A
   seven-hex tag that happens to look like a short SHA would pass the
@@ -127,13 +127,13 @@ The Python API is intentionally small:
 
     from reqcheck import parse_text, audit_parsed, audit_file, Finding
 
-`parse_text(text, path=...) -> ParsedFile` — line-oriented parser.
+`parse_text(text, path=...) -> ParsedFile` - line-oriented parser.
 
-`audit_parsed(pf, include_info=False) -> list[Finding]` — apply the
+`audit_parsed(pf, include_info=False) -> list[Finding]` - apply the
 rules to a `ParsedFile`.
 
 `audit_file(path, include_info=False) -> (ParsedFile, list[Finding])`
-— read + parse + audit a file on disk.
+ - read + parse + audit a file on disk.
 
 Each `Finding` has `rule`, `severity`, `message`, `location`, `file`,
 `name`, `suggestion`, and a `to_dict()` for JSON-friendly output.

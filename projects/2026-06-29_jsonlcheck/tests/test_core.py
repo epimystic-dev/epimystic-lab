@@ -242,7 +242,7 @@ class FinalNewline(unittest.TestCase):
         self.assertEqual(_issues(text), [])
 
     def test_empty_file_no_final_newline_warning(self):
-        # nothing seen at all → no warning either way
+        # nothing seen at all -> no warning either way
         self.assertEqual(_issues(""), [])
 
 

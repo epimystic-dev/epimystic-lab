@@ -31,7 +31,7 @@ no full-file parse, gzip auto-detected on `.gz`.
 
 ## Install
 
-It's one tiny package — drop the `jsonlcheck/` folder into your repo, or:
+It's one tiny package - drop the `jsonlcheck/` folder into your repo, or:
 
 ```
 pip install -e .
@@ -55,7 +55,7 @@ python -m jsonlcheck [paths...] [flags]
 | `--allow-blank` | Permit blank or whitespace-only lines. |
 | `--allow-nan` | Permit `NaN` / `Infinity` / `-Infinity`. |
 | `--allow-duplicate-keys` | Permit duplicate keys in objects. |
-| `--allow-control-chars` | Permit literal `U+0000`–`U+001F` inside strings. |
+| `--allow-control-chars` | Permit literal `U+0000`-`U+001F` inside strings. |
 | `--no-final-newline-check` | Don't warn on missing trailing newline. |
 | `--max-issues N` | Stop emitting issues after `N` (per file). |
 | `--quiet` | Suppress per-issue output; only set the exit code. |
@@ -66,7 +66,7 @@ python -m jsonlcheck [paths...] [flags]
 ## Example
 
 `examples/bad.jsonl` is a five-line fixture designed to trip four
-different rules — one duplicate key, one `NaN` literal, one blank line,
+different rules - one duplicate key, one `NaN` literal, one blank line,
 and no trailing newline at EOF:
 
     {"id": 1, "label": "cat"}
@@ -137,7 +137,7 @@ MIT. See `LICENSE`.
 
 ## Provenance
 
-Built by a human–machine hybrid intelligence working under a published
+Built by a human-machine hybrid intelligence working under a published
 governance + clean-room build protocol. Clean-room: not derived from any
 existing JSONL validator's source. RFC references: RFC 7464 (JSON Text
 Sequences), RFC 8259 (JSON).

@@ -1,8 +1,8 @@
 # seedline
 
-One opinionated function — `seed_all(n)` — that seeds every RNG that matters
+One opinionated function - `seed_all(n)` - that seeds every RNG that matters
 across Python, NumPy, and PyTorch from a single call. A matching context
-manager — `seeded(n)` — does the same and **restores prior state on exit**,
+manager - `seeded(n)` - does the same and **restores prior state on exit**,
 so a deterministic block leaves no global side effects behind. Pure stdlib
 core; NumPy and PyTorch integrations are optional and detected at runtime.
 
@@ -12,7 +12,7 @@ from seedline import seed_all, seeded
 # top-of-program lockdown
 seed_all(42)
 
-# scope-limited determinism — exits restore the prior RNG state
+# scope-limited determinism - exits restore the prior RNG state
 with seeded(0):
     sample = my_model.sample()
     # ... etc.
@@ -53,11 +53,11 @@ Seeds `random`, `numpy.random` (if present), `torch.manual_seed` and
 `torch.cuda.manual_seed_all` (if present). Returns a `SeedSnapshot` of the
 state *before* seeding so you can `restore()` it later.
 
-Validates `seed` is a non-bool integer in `[0, 2**32)` — the intersection of
+Validates `seed` is a non-bool integer in `[0, 2**32)` - the intersection of
 what NumPy's legacy `RandomState` and `torch.manual_seed` accept on every
 platform.
 
-### `seeded(seed: int)` — context manager
+### `seeded(seed: int)` - context manager
 
 ```python
 with seeded(42) as prior_snapshot:
@@ -132,8 +132,8 @@ test-suite banner. It runs from a fresh clone with no install:
     random.random() inside seeded(0) again -> 0.8444218515250481
     demo OK
 
-The `backends` line will vary — NumPy/PyTorch/CUDA are detected at
-call time — but the `random.random()` values are deterministic across
+The `backends` line will vary - NumPy/PyTorch/CUDA are detected at
+call time - but the `random.random()` values are deterministic across
 Python versions and match `seed_all(42)` / `seeded(0)` exactly. The
 "outside seeded()" value between the two `seeded(0)` blocks is
 different from the `inside` values, confirming that `seeded()` did
@@ -154,6 +154,6 @@ MIT. See `LICENSE`.
 
 ## Provenance
 
-Built by a human–machine hybrid intelligence working under a published
+Built by a human-machine hybrid intelligence working under a published
 governance + clean-room build protocol. Clean-room: not derived from any
 existing seed-everything helper.

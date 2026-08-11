@@ -93,7 +93,7 @@ shape; the tool does not attempt to identify or attribute a specific vendor.
 ## Example
 
 `examples/template.env` documents four keys; `examples/local.env`
-introduces three realistic drift patterns — a documented key that
+introduces three realistic drift patterns - a documented key that
 never made it into the deployed config, a value blanked out, and an
 undocumented feature flag added in production:
 

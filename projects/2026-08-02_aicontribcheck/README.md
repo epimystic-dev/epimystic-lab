@@ -55,8 +55,8 @@ aicontribcheck [path] [--json] [--strict] [--include-info] [--extra-tool-name NA
 
 ### Vendor neutrality (why no product names ship in the patterns)
 
-The shipped patterns match **generic** markers only — `ai`, `llm`, `ai-generated`,
-`ai-assisted`, `coding agent`, `generative ai`, and so on — which is how the
+The shipped patterns match **generic** markers only - `ai`, `llm`, `ai-generated`,
+`ai-assisted`, `coding agent`, `generative ai`, and so on - which is how the
 overwhelming majority of real contribution policies are actually worded.
 
 No specific product names are hardcoded, deliberately. The assistant landscape churns
@@ -74,10 +74,10 @@ patterns.register_tool_names(["some-assistant", "another-tool"])
 ```
 
 Registered names extend **both** the named-tool evidence rule (`AICONTRIB-007`) and the
-AI marker used by the ban/allow/disclosure rules — so `no <name> contributions` is
+AI marker used by the ban/allow/disclosure rules - so `no <name> contributions` is
 detected as a ban, not merely noted as a mention. Names are regex-escaped and matched
 case-insensitively on word boundaries, so plain strings are safe to pass. With no names
-registered, `tools_named` is `[]` — the tool reports what it can actually see, and does
+registered, `tools_named` is `[]` - the tool reports what it can actually see, and does
 not pretend to a product list it was not given.
 
 ### Exit codes
@@ -193,7 +193,7 @@ Per-repo cap: 40 files.
   server. Point it at a working copy.
 - **Not a code-provenance scanner.** aicontribcheck answers "is my
   contribution allowed here?" It does NOT answer "was this code
-  actually written by AI?" — that is a different problem.
+  actually written by AI?" - that is a different problem.
 - **No SBOM output.** aicontribcheck writes a policy verdict, not a
   bill of materials.
 

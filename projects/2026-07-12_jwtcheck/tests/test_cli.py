@@ -99,7 +99,7 @@ class TestCLI(unittest.TestCase):
             stdout=stdout,
             stderr=io.StringIO(),
         )
-        # Warns still affect the exit code — that's the whole-file verdict —
+        # Warns still affect the exit code - that's the whole-file verdict -
         # but they should not appear in the emitted report.
         self.assertEqual(rc, 1)
         self.assertNotIn("JWT-A007", stdout.getvalue())

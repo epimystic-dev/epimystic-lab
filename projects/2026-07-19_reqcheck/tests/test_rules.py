@@ -29,7 +29,7 @@ class A001UnpinnedTests(unittest.TestCase):
         self.assertNotIn("REQ-A001", rules_fired("foo===1.0-alpha\n"))
 
     def test_wildcard_pin_still_unpinned(self):
-        # '==1.0.*' is not an exact pin per PEP 440 — still unpinned for
+        # '==1.0.*' is not an exact pin per PEP 440 - still unpinned for
         # reproducibility purposes.
         self.assertIn("REQ-A001", rules_fired("foo==1.0.*\n"))
 
@@ -114,7 +114,7 @@ class A006VcsTests(unittest.TestCase):
 
 class A007HomographTests(unittest.TestCase):
     def test_cyrillic_a_in_name_triggers(self):
-        # Cyrillic 'а' (U+0430) — visually indistinguishable from Latin 'a'.
+        # Cyrillic 'а' (U+0430) - visually indistinguishable from Latin 'a'.
         text = "reqуests==1.0\n"
         rules = rules_fired(text)
         self.assertIn("REQ-A007", rules)

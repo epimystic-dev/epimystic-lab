@@ -23,7 +23,7 @@ Every linter is invokable as `python -m <tool>`, with `argparse`-style flags. Th
 ### The one invariant every tool upholds
 
 `rc == 0` iff the input was clean (no findings surfaced under the tool's default
-severity filter). `rc != 0` iff the tool has something the CI job should notice —
+severity filter). `rc != 0` iff the tool has something the CI job should notice -
 findings, unreadable input, or an internal error. A CI script that only cares
 "did anything worth attention happen" can rely on `test $? -eq 0` uniformly across
 all six tools.
@@ -42,7 +42,7 @@ Evidence (run 2026-08-11):
 
 *`aicontribcheck` and `skillcheck` return `1` on a "clean" run against most inputs
 because their exit codes encode a *verdict* (allowed / unknown / banned or
-safe / unknown / unsafe) rather than a finding count — a caller wanting a strict
+safe / unknown / unsafe) rather than a finding count - a caller wanting a strict
 `0` requires an explicit allowed/safe verdict from the tool. This is a deliberate
 verdict-based encoding, not a divergence to fix.
 
@@ -50,11 +50,11 @@ verdict-based encoding, not a divergence to fix.
 
 Tools split between two conventions when a finding is present:
 
-- **Convention A — severity-blind.** `rc=1` for any finding, `rc=2` reserved for
+- **Convention A - severity-blind.** `rc=1` for any finding, `rc=2` reserved for
   usage/IO error. Followed by `jsonlcheck` and `envcheck`.
-- **Convention B — severity-tiered.** `rc=1` for warnings only, `rc=2` for errors
+- **Convention B - severity-tiered.** `rc=1` for warnings only, `rc=2` for errors
   OR unrecoverable IO. Followed by `jwtcheck`, `reqcheck`, `licensechain`.
-- **Convention C — verdict-based.** `rc` reflects a policy verdict rather than
+- **Convention C - verdict-based.** `rc` reflects a policy verdict rather than
   finding severity: `1` = `unknown` / `conditional`, `2` = `banned` / `conflict`
   (or `unsafe`). Used by `aicontribcheck` and `skillcheck`. This convention is a
   good fit for policy tools and is not on the convergence list.
@@ -78,12 +78,12 @@ Every tool that produces structured output emits it on **stdout** and reserves
 A caller that pipes stdout into `jq` or `json.loads` will never see the tool's
 own chatter mixed in.
 
-The flag names and JSON top-level shapes currently diverge — this is the largest
+The flag names and JSON top-level shapes currently diverge - this is the largest
 open convergence target:
 
 | Tool           | Flag                | Top-level JSON shape                                          |
 |----------------|---------------------|---------------------------------------------------------------|
-| jsonlcheck     | (no JSON mode yet)  | —                                                             |
+| jsonlcheck     | (no JSON mode yet)  | - |
 | envcheck       | `--format json`     | NDJSON: one `{"code","line","column","message","file",...}` per line |
 | jwtcheck       | `--format json`     | JSON array of `{"rule","severity","message","key","line","col","source"}` |
 | reqcheck       | `--format json`     | JSON array of finding objects (`Finding.to_dict()`)           |
@@ -99,8 +99,8 @@ per tool, not a silent shape change.
 
 ## Stdout / stderr discipline
 
-- Findings and structured output → **stdout**.
-- Diagnostics, labels, error prefixes, summary lines → **stderr**.
+- Findings and structured output -> **stdout**.
+- Diagnostics, labels, error prefixes, summary lines -> **stderr**.
 - A silent `rc=0` run should produce no stdout (except structured output when
   requested); tools that print a "no issues" summary do so to stderr.
 
@@ -108,7 +108,7 @@ per tool, not a silent shape change.
 
 Present on `jsonlcheck`, `jwtcheck`, `licensechain`, `aicontribcheck`, `skillcheck`
 and prints `<tool> <version>` then exits `0`. **Missing on `envcheck` and
-`reqcheck`** — tracked as a small convergence item; add-on parity is a mechanical
+`reqcheck`** - tracked as a small convergence item; add-on parity is a mechanical
 follow-up.
 
 ## Input encoding
@@ -126,8 +126,8 @@ rather than crashing. Where a tool accepts stdin, `-` is the sentinel path.
 5. Tools are stdlib-only, so `pip install` is not required to run any of them from
    a clean clone.
 
-The finer distinctions — severity tiering in the exit code, the exact JSON shape,
-`--version` availability — are per-tool and documented above.
+The finer distinctions - severity tiering in the exit code, the exact JSON shape,
+`--version` availability - are per-tool and documented above.
 
 ## What is planned to converge
 
