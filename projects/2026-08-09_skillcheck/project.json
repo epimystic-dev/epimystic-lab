@@ -1,0 +1,11 @@
+{
+  "name": "skillcheck",
+  "slug": "2026-08-09_skillcheck",
+  "one_liner": "Offline safety linter for agent skill files: scans SKILL.md / AGENTS.md / skills/ / .skills/ / agents/ / .agents/ / prompts/ / .prompts/ / *.skill.md for embedded destructive shell, privilege escalation, network exfiltration / reverse-shell shapes, credential-path or secret-env-var references, obfuscated or hidden-character execution, prompt-injection payload markers, runtime install-and-execute pipelines, archive exfiltration, suspicious external URLs, and undeclared-capability skill files, and emits a structured verdict (safe | suspicious | unsafe | unknown).",
+  "problem": "arXiv 2608.05223 ('Towards a Risk Assessment of Malicious Skill Files in Coding Agents', 2026-08-05) demonstrates that coding agents can be induced to execute adversarial shell commands embedded in natural-language skill files, and explicitly calls for skill-interface risk mitigation tooling. The missing offline primitive is a small pre-flight linter that, given a repository checkout, scans a canonical set of agent-skill locations and emits a structured verdict about whether the skill inventory is safe to load. skillcheck is that primitive. Ten documented rules (SKILLCHECK-001 through SKILLCHECK-010) cover destructive shell, privilege escalation, network exfiltration and reverse shell, credential and secret reference, obfuscation and hidden-character control, prompt-injection payload markers, runtime install-and-execute, filesystem archive exfiltration, undeclared-capability skill files, and suspicious external URL references.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install .",
+  "deps": [],
+  "license": "MIT"
+}

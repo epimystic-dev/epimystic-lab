@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skillcheck"
+version = "0.1.0"
+description = "Offline safety linter for agent skill files."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Epimystic" }]
+keywords = ["agent", "skills", "security", "linter", "static-analysis"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: OS Independent",
+  "Topic :: Security",
+  "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = []
+
+[project.scripts]
+skillcheck = "skillcheck.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["skillcheck*"]
