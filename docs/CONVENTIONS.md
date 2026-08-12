@@ -106,10 +106,10 @@ per tool, not a silent shape change.
 
 ## `--version`
 
-Present on `jsonlcheck`, `jwtcheck`, `licensechain`, `aicontribcheck`, `skillcheck`
-and prints `<tool> <version>` then exits `0`. **Missing on `envcheck` and
-`reqcheck`** - tracked as a small convergence item; add-on parity is a mechanical
-follow-up.
+Present on all seven linters (`jsonlcheck`, `envcheck`, `jwtcheck`, `reqcheck`,
+`licensechain`, `aicontribcheck`, `skillcheck`) and prints `<tool> <version>`
+then exits `0`. The `envcheck` and `reqcheck` additions landed 2026-08-12 and
+close the parity gap the earlier audit named.
 
 ## Input encoding
 
@@ -137,5 +137,4 @@ Tracked in `MAINTENANCE_BACKLOG.md`:
 - Unify the JSON top-level shape (wrapping object with `tool`, `source`, `findings`,
   `summary`).
 - Bring severity-based linters onto Convention B (severity-tiered exit codes).
-- Add `--version` parity to `envcheck` and `reqcheck`.
 - Add a per-tool test asserting the shared-invariants section above.

@@ -8,6 +8,7 @@ import os
 import sys
 from typing import Iterable, List, Sequence, TextIO
 
+from . import __version__
 from .model import Finding
 from .parser import parse_text
 from .rules import audit_file, audit_parsed
@@ -89,6 +90,11 @@ def main(argv: Sequence[str] | None = None,
             "Offline hygiene linter for pip-style requirements files. "
             "Reports supply-chain and reproducibility risks."
         ),
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"reqcheck {__version__}",
     )
     parser.add_argument(
         "paths",

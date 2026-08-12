@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Sequence
 
+from . import __version__
 from .core import CheckOptions, Diagnostic, check, parse
 
 
@@ -19,6 +20,11 @@ def _build_parser() -> argparse.ArgumentParser:
             "(e.g. .env.example) against an actual .env, flags key drift, "
             "syntax issues, and probable credentials pasted into either."
         ),
+    )
+    p.add_argument(
+        "--version",
+        action="version",
+        version=f"envcheck {__version__}",
     )
     p.add_argument(
         "template",

@@ -49,6 +49,9 @@ envcheck --no-secrets
 
 # Only secret scan of the template, no env file:
 envcheck .env.example --no-drift
+
+# Print the tool version (for CI-side version logging):
+envcheck --version
 ```
 
 Exit codes: `0` clean, `1` findings, `2` usage or I/O error.

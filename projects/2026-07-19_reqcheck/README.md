@@ -96,6 +96,10 @@ JSON output for CI:
 
     python -m reqcheck --format json examples/bad.txt
 
+Print the tool version (for CI-side version logging):
+
+    python -m reqcheck --version
+
 ## Scope and limits
 
 - **pip-style requirements files only.** No `pyproject.toml` PEP 621

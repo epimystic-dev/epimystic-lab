@@ -121,5 +121,20 @@ class CLIBehavior(CLIFixture):
         return str(p)
 
 
+class VersionFlag(unittest.TestCase):
+    """Parity with jsonlcheck / jwtcheck / licensechain / aicontribcheck /
+    skillcheck: `--version` prints `envcheck <version>` on stdout and exits 0.
+    CI consumers that log tool versions rely on this."""
+
+    def test_version_prints_name_and_version_and_exits_zero(self):
+        from envcheck import __version__
+        buf_out, buf_err = io.StringIO(), io.StringIO()
+        with redirect_stdout(buf_out), redirect_stderr(buf_err):
+            with self.assertRaises(SystemExit) as cm:
+                main(["--version"])
+        self.assertEqual(cm.exception.code, 0)
+        self.assertEqual(buf_out.getvalue().strip(), f"envcheck {__version__}")
+
+
 if __name__ == "__main__":
     unittest.main()

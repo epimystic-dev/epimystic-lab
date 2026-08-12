@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 
 from reqcheck.cli import main, EXIT_CLEAN, EXIT_WARN, EXIT_ERROR
 
@@ -175,6 +176,24 @@ class ExampleFileTests(unittest.TestCase):
         out = io.StringIO()
         code = main([path], stdout=out, stderr=io.StringIO())
         self.assertEqual(code, EXIT_ERROR, out.getvalue())
+
+
+class VersionFlagTests(unittest.TestCase):
+    """Parity with jsonlcheck / jwtcheck / licensechain / aicontribcheck /
+    skillcheck: `--version` prints `reqcheck <version>` on stdout and exits 0.
+    CI consumers that log tool versions rely on this."""
+
+    def test_version_prints_name_and_version_and_exits_zero(self):
+        # argparse's action="version" writes to sys.stdout directly, bypassing
+        # the stdout= argument main() accepts. redirect_stdout patches sys.stdout
+        # itself, so this captures argparse's write.
+        from reqcheck import __version__
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as cm:
+                main(["--version"])
+        self.assertEqual(cm.exception.code, 0)
+        self.assertEqual(buf.getvalue().strip(), f"reqcheck {__version__}")
 
 
 if __name__ == "__main__":
