@@ -79,12 +79,14 @@ A caller that pipes stdout into `jq` or `json.loads` will never see the tool's
 own chatter mixed in.
 
 The flag names and JSON top-level shapes currently diverge - this is the largest
-open convergence target:
+open convergence target. `envcheck` accepts both `--json` and `--format json` as
+of 2026-08-13 (first tool to converge on the target flag name); `jwtcheck` and
+`reqcheck` still accept only `--format json`.
 
 | Tool           | Flag                | Top-level JSON shape                                          |
 |----------------|---------------------|---------------------------------------------------------------|
 | jsonlcheck     | (no JSON mode yet)  | - |
-| envcheck       | `--format json`     | NDJSON: one `{"code","line","column","message","file",...}` per line |
+| envcheck       | `--json` (or `--format json`) | NDJSON: one `{"code","line","column","message","file",...}` per line |
 | jwtcheck       | `--format json`     | JSON array of `{"rule","severity","message","key","line","col","source"}` |
 | reqcheck       | `--format json`     | JSON array of finding objects (`Finding.to_dict()`)           |
 | licensechain   | `--json`            | JSON object: `{"source","findings":[...],"summary":{...}}`   |

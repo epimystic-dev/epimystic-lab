@@ -55,6 +55,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Output format (default: text).",
     )
     p.add_argument(
+        "--json",
+        action="store_true",
+        help=(
+            "Shortcut for --format json. Preferred flag; --format json is "
+            "retained for compatibility."
+        ),
+    )
+    p.add_argument(
         "--max-issues",
         type=int,
         default=None,
@@ -71,6 +79,8 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
+    if args.json:
+        args.format = "json"
 
     template_path = Path(args.template)
     if not template_path.exists():

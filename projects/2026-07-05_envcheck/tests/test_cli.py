@@ -121,6 +121,57 @@ class CLIBehavior(CLIFixture):
         return str(p)
 
 
+class JsonAliasFlag(CLIFixture):
+    """`--json` is a boolean shortcut for `--format json`. Convergence step
+    toward the single flag name documented in docs/CONVENTIONS.md; before
+    this change argparse would reject `--json` with SystemExit(2)."""
+
+    def test_json_alias_produces_ndjson_on_findings(self):
+        self._write(".env.example", "A=1\n")
+        self._write(".env", "EXTRA=x\n")
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(io.StringIO()):
+            rc = main([".env.example", ".env", "--json", "--quiet"])
+        self.assertEqual(rc, 1)
+        records = [json.loads(l) for l in buf.getvalue().splitlines() if l.strip()]
+        codes = {r["code"] for r in records}
+        self.assertIn("D001", codes)
+        self.assertIn("D002", codes)
+
+    def test_json_alias_clean_input_returns_zero_with_no_stdout(self):
+        self._write(".env.example", "A=1\nB=2\n")
+        self._write(".env", "A=1\nB=2\n")
+        buf_out, buf_err = io.StringIO(), io.StringIO()
+        with redirect_stdout(buf_out), redirect_stderr(buf_err):
+            rc = main([".env.example", ".env", "--json", "--quiet"])
+        self.assertEqual(rc, 0)
+        self.assertEqual(buf_out.getvalue(), "")
+
+    def test_json_alias_output_matches_format_json_byte_for_byte(self):
+        self._write(".env.example", "A=1\nREDIS_URL=redis://x\n")
+        self._write(".env", "A=1\nEXTRA=x\n")
+        buf_alias, buf_legacy = io.StringIO(), io.StringIO()
+        with redirect_stdout(buf_alias), redirect_stderr(io.StringIO()):
+            rc_alias = main([".env.example", ".env", "--json", "--quiet"])
+        with redirect_stdout(buf_legacy), redirect_stderr(io.StringIO()):
+            rc_legacy = main([".env.example", ".env", "--format", "json", "--quiet"])
+        self.assertEqual(rc_alias, rc_legacy)
+        self.assertEqual(buf_alias.getvalue(), buf_legacy.getvalue())
+
+    def test_json_wins_when_conflicting_format_text_also_given(self):
+        # `--json` is the more specific, targeted intent; when both flags
+        # are given, JSON must win so `--json` is safe to pass in a wrapper
+        # that also inherits a legacy `--format text` default.
+        self._write(".env.example", "A=1\n")
+        self._write(".env", "EXTRA=x\n")
+        buf = io.StringIO()
+        with redirect_stdout(buf), redirect_stderr(io.StringIO()):
+            rc = main([".env.example", ".env", "--json", "--format", "text", "--quiet"])
+        self.assertEqual(rc, 1)
+        for line in (l for l in buf.getvalue().splitlines() if l.strip()):
+            json.loads(line)  # would raise if text formatter had run
+
+
 class VersionFlag(unittest.TestCase):
     """Parity with jsonlcheck / jwtcheck / licensechain / aicontribcheck /
     skillcheck: `--version` prints `envcheck <version>` on stdout and exits 0.
