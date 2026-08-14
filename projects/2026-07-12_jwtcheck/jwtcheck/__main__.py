@@ -59,6 +59,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="output format (default: text)",
     )
     p.add_argument(
+        "--json",
+        action="store_true",
+        help=(
+            "shortcut for --format json. Preferred flag; --format json is "
+            "retained for compatibility."
+        ),
+    )
+    p.add_argument(
         "--extra-secret-key",
         action="append",
         default=[],
@@ -120,6 +128,8 @@ def run(argv: Sequence[str], stdout=None, stderr=None) -> int:
     stderr = stderr if stderr is not None else sys.stderr
 
     ns = _build_parser().parse_args(argv)
+    if ns.json:
+        ns.format = "json"
 
     all_findings: List[Finding] = []
     io_error = False

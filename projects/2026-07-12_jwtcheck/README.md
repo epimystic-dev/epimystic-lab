@@ -39,7 +39,7 @@ Python >= 3.8, no runtime dependencies.
 
 ```
 jwtcheck .env
-jwtcheck .env .env.example --format json
+jwtcheck .env .env.example --json    # or the equivalent --format json
 jwtcheck .env --severity error       # suppress warns in report
 jwtcheck .env --extra-secret-key '^MY_CUSTOM_TOKEN$'
 ```

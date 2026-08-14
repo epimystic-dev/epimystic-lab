@@ -163,5 +163,70 @@ class TestExtraSecretKeyRegexValidation(unittest.TestCase):
         self.assertEqual(rc, 2)  # recognised as secret + weak default
 
 
+class JsonAliasFlag(unittest.TestCase):
+    """`--json` is a boolean shortcut for `--format json`. Second convergence
+    step (after envcheck 2026-08-13) toward the single flag name documented
+    in docs/CONVENTIONS.md; before this change argparse would reject `--json`
+    with SystemExit(2)."""
+
+    def _write_tmp_env(self, content: str) -> str:
+        fd, path = tempfile.mkstemp(suffix=".env")
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
+            f.write(content)
+        self.addCleanup(os.remove, path)
+        return path
+
+    def test_json_alias_produces_json_array_on_findings(self):
+        path = self._write_tmp_env("JWT_SECRET=\n")
+        stdout = io.StringIO()
+        rc = run([path, "--json"], stdout=stdout, stderr=io.StringIO())
+        self.assertEqual(rc, 2)
+        payload = json.loads(stdout.getvalue())
+        self.assertIsInstance(payload, list)
+        self.assertGreaterEqual(len(payload), 1)
+        rules = {r["rule"] for r in payload}
+        self.assertIn("JWT-A003", rules)
+
+    def test_json_alias_clean_input_returns_zero_with_empty_array(self):
+        path = self._write_tmp_env("DATABASE_URL=postgres://x/y\n")
+        stdout, stderr = io.StringIO(), io.StringIO()
+        rc = run([path, "--json"], stdout=stdout, stderr=stderr)
+        self.assertEqual(rc, 0)
+        # jwtcheck's JSON shape is a single array (not NDJSON); clean input
+        # emits `[]` per the shape documented in docs/CONVENTIONS.md. The
+        # shape convergence is a separate open backlog item.
+        self.assertEqual(json.loads(stdout.getvalue()), [])
+
+    def test_json_alias_output_matches_format_json_byte_for_byte(self):
+        path = self._write_tmp_env(
+            "JWT_ALGORITHM=none\nJWT_SECRET=changeme\n"
+        )
+        buf_alias, buf_legacy = io.StringIO(), io.StringIO()
+        rc_alias = run(
+            [path, "--json"], stdout=buf_alias, stderr=io.StringIO()
+        )
+        rc_legacy = run(
+            [path, "--format", "json"], stdout=buf_legacy, stderr=io.StringIO()
+        )
+        self.assertEqual(rc_alias, rc_legacy)
+        self.assertEqual(buf_alias.getvalue(), buf_legacy.getvalue())
+
+    def test_json_wins_when_conflicting_format_text_also_given(self):
+        # `--json` is the more specific, targeted intent; when both flags
+        # are given, JSON must win so `--json` is safe to pass through a
+        # wrapper that also inherits a legacy `--format text` default.
+        path = self._write_tmp_env("JWT_SECRET=\n")
+        stdout = io.StringIO()
+        rc = run(
+            [path, "--json", "--format", "text"],
+            stdout=stdout,
+            stderr=io.StringIO(),
+        )
+        self.assertEqual(rc, 2)
+        # Would raise if the text formatter had run (its lines start with
+        # `<path>:<line>:<col>:` and are not valid JSON).
+        json.loads(stdout.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()
