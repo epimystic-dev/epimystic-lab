@@ -178,6 +178,70 @@ class ExampleFileTests(unittest.TestCase):
         self.assertEqual(code, EXIT_ERROR, out.getvalue())
 
 
+class JsonAliasFlagTests(unittest.TestCase):
+    """`--json` is a boolean shortcut for `--format json`. Third and final
+    tool to converge on the single flag name documented in
+    docs/CONVENTIONS.md (envcheck 2026-08-13, jwtcheck 2026-08-14). Before
+    this change argparse would reject `--json` with SystemExit(2)."""
+
+    def _write(self, text: str) -> str:
+        fd, path = tempfile.mkstemp(suffix=".txt")
+        os.close(fd)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        self.addCleanup(os.unlink, path)
+        return path
+
+    def test_json_alias_produces_json_array_on_findings(self):
+        path = self._write(BAD_REQS)
+        out = io.StringIO()
+        code = main([path, "--json"], stdout=out, stderr=io.StringIO())
+        # BAD_REQS contains --trusted-host (REQ-A005 error) so rc==EXIT_ERROR.
+        self.assertEqual(code, EXIT_ERROR)
+        payload = json.loads(out.getvalue())
+        self.assertIsInstance(payload, list)
+        rules = {row["rule"] for row in payload}
+        self.assertIn("REQ-A005", rules)
+
+    def test_json_alias_clean_input_returns_zero_with_empty_array(self):
+        path = self._write(OK_REQS)
+        out = io.StringIO()
+        code = main([path, "--json"], stdout=out, stderr=io.StringIO())
+        self.assertEqual(code, EXIT_CLEAN)
+        # reqcheck's JSON shape is a single array (not envcheck's NDJSON);
+        # the shape-convergence work is a separate open backlog item, so
+        # this test locks the current shape honestly rather than papering
+        # over the divergence.
+        payload = json.loads(out.getvalue())
+        self.assertEqual(payload, [])
+
+    def test_json_alias_output_matches_format_json_byte_for_byte(self):
+        # The alias must be a faithful shortcut, not a parallel-but-diverging
+        # code path. Proven by byte-for-byte identity on the same input.
+        path = self._write(BAD_REQS)
+        buf_alias, buf_legacy = io.StringIO(), io.StringIO()
+        rc_alias = main([path, "--json"], stdout=buf_alias, stderr=io.StringIO())
+        rc_legacy = main(
+            [path, "--format", "json"], stdout=buf_legacy, stderr=io.StringIO()
+        )
+        self.assertEqual(rc_alias, rc_legacy)
+        self.assertEqual(buf_alias.getvalue(), buf_legacy.getvalue())
+
+    def test_json_wins_when_conflicting_format_text_also_given(self):
+        # `--json` is the more explicit intent; when both flags are given
+        # JSON must win so `--json` is safe to pass in a wrapper that also
+        # inherits a legacy `--format text` default. (Matches envcheck /
+        # jwtcheck last-wins-by-specificity semantics.)
+        path = self._write(BAD_REQS)
+        buf = io.StringIO()
+        code = main(
+            [path, "--json", "--format", "text"], stdout=buf, stderr=io.StringIO()
+        )
+        self.assertEqual(code, EXIT_ERROR)
+        # Text formatter would produce a "REQ-A005:" prefixed line, not JSON.
+        json.loads(buf.getvalue())  # would raise if text formatter had run
+
+
 class VersionFlagTests(unittest.TestCase):
     """Parity with jsonlcheck / jwtcheck / licensechain / aicontribcheck /
     skillcheck: `--version` prints `reqcheck <version>` on stdout and exits 0.

@@ -108,6 +108,14 @@ def main(argv: Sequence[str] | None = None,
         help="output format (default: text)",
     )
     parser.add_argument(
+        "--json",
+        action="store_true",
+        help=(
+            "Shortcut for --format json. Preferred flag; --format json is "
+            "retained for compatibility."
+        ),
+    )
+    parser.add_argument(
         "--strict",
         action="store_true",
         help="treat warnings as errors (exit 2 on any warning)",
@@ -118,6 +126,8 @@ def main(argv: Sequence[str] | None = None,
         help="include informational findings (REQ-A009)",
     )
     args = parser.parse_args(list(argv) if argv is not None else None)
+    if args.json:
+        args.format = "json"
 
     all_findings: List[Finding] = []
     exit_code = EXIT_CLEAN

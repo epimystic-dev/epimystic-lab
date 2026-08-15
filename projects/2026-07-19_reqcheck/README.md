@@ -94,7 +94,9 @@ Produces:
 
 JSON output for CI:
 
-    python -m reqcheck --format json examples/bad.txt
+    python -m reqcheck --json examples/bad.txt
+
+(`--format json` is retained as an alias for existing callers.)
 
 Print the tool version (for CI-side version logging):
 

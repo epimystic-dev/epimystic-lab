@@ -78,17 +78,19 @@ Every tool that produces structured output emits it on **stdout** and reserves
 A caller that pipes stdout into `jq` or `json.loads` will never see the tool's
 own chatter mixed in.
 
-The flag names and JSON top-level shapes currently diverge - this is the largest
-open convergence target. `envcheck` (2026-08-13) and `jwtcheck` (2026-08-14) now
-accept both `--json` and `--format json`; `reqcheck` still accepts only
-`--format json`.
+The flag names and JSON top-level shapes still diverge on shape, but the flag
+name is now unified: all three severity-tiered linters (`envcheck` 2026-08-13,
+`jwtcheck` 2026-08-14, `reqcheck` 2026-08-15) accept both `--json` and
+`--format json`, matching the boolean `--json` already shipped by
+`licensechain`, `aicontribcheck`, and `skillcheck`. Shape convergence remains
+the next open target.
 
 | Tool           | Flag                | Top-level JSON shape                                          |
 |----------------|---------------------|---------------------------------------------------------------|
 | jsonlcheck     | (no JSON mode yet)  | - |
 | envcheck       | `--json` (or `--format json`) | NDJSON: one `{"code","line","column","message","file",...}` per line |
 | jwtcheck       | `--json` (or `--format json`) | JSON array of `{"rule","severity","message","key","line","col","source"}` |
-| reqcheck       | `--format json`     | JSON array of finding objects (`Finding.to_dict()`)           |
+| reqcheck       | `--json` (or `--format json`) | JSON array of finding objects (`Finding.to_dict()`)           |
 | licensechain   | `--json`            | JSON object: `{"source","findings":[...],"summary":{...}}`   |
 | aicontribcheck | `--json`            | JSON object: full `RepoReport` (`files_scanned`, `verdict`, ...) |
 | skillcheck     | `--json`            | JSON object: full report (`files_scanned`, `verdict`, ...)       |
@@ -135,7 +137,10 @@ The finer distinctions - severity tiering in the exit code, the exact JSON shape
 
 Tracked in `MAINTENANCE_BACKLOG.md`:
 
-- Unify `--json` vs `--format json` on a single flag name.
+- ~~Unify `--json` vs `--format json` on a single flag name.~~ Done 2026-08-15:
+  all three severity-tiered linters now accept `--json` (envcheck 2026-08-13,
+  jwtcheck 2026-08-14, reqcheck 2026-08-15); `--format json` is retained as an
+  alias for existing callers.
 - Unify the JSON top-level shape (wrapping object with `tool`, `source`, `findings`,
   `summary`).
 - Bring severity-based linters onto Convention B (severity-tiered exit codes).
