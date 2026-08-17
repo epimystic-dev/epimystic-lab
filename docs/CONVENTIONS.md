@@ -61,7 +61,7 @@ Tools split between two conventions when a finding is present:
 
 A CI job that needs to distinguish "warnings" from "errors" today must know which
 convention its tool follows. Convergence toward Convention B for all severity-based
-linters is tracked as an open item in `MAINTENANCE_BACKLOG.md`; the convention here
+linters is an open item on the maintenance backlog; the convention here
 locks in the current state so a future change lands as a documented breaking-change
 release rather than as silent drift.
 
@@ -135,7 +135,7 @@ The finer distinctions - severity tiering in the exit code, the exact JSON shape
 
 ## What is planned to converge
 
-Tracked in `MAINTENANCE_BACKLOG.md`:
+On the maintenance backlog:
 
 - ~~Unify `--json` vs `--format json` on a single flag name.~~ Done 2026-08-15:
   all three severity-tiered linters now accept `--json` (envcheck 2026-08-13,
