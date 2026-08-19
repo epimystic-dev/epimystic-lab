@@ -1,0 +1,11 @@
+{
+  "name": "agentmdlint",
+  "slug": "2026-08-16_agentmdlint",
+  "one_liner": "Offline maintainability linter for agent instruction files (AGENTS.md, AGENT.md, CLAUDE.md, GEMINI.md, .cursorrules, CURSOR.md, AI_INSTRUCTIONS.md, .github/copilot-instructions.md and similar): flags byte/instruction bloat, near-duplicate instructions, missing rationale, dead headings, drift markers (TODO/FIXME/XXX/DEPRECATED/HACK/TBD), stale amendment dates, candidate contradictions, missing purpose header, and imperative-walls; emits a structured verdict (healthy | needs-attention | unhealthy | unknown).",
+  "problem": "arXiv 2608.11095 ('CLAUDE.md Growth' / 'catastrophic remembering', 2026-08-11) characterises 247,694 instruction lifetimes across 1,867 repositories and shows that agent instruction files grow +226% over their lifetime with +4.9 net instructions per commit, because appending is cheap while deletion is O(2^|D|)-risky once an instruction's rationale is lost. The paper's remedy hypothesis is 'prompt comments can halt the growth'. The missing offline primitive is a small pre-flight linter that, given a repository checkout, scans a canonical set of agent-instruction locations and emits a structured maintainability verdict. agentmdlint is that primitive. Ten documented rules (AGENTMD-001 through AGENTMD-010) cover byte-size bloat, instruction-count bloat, near-duplicate instructions, missing rationale, dead headings, drift markers, stale amendments, candidate contradictions, missing purpose header, and imperative walls. Complements skillcheck (safety scan on the same file surface) with the orthogonal maintainability concern.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install .",
+  "deps": [],
+  "license": "MIT"
+}
