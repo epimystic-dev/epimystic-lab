@@ -1,0 +1,11 @@
+{
+  "name": "oraclecheck",
+  "slug": "2026-08-23_oraclecheck",
+  "one_liner": "Offline AST linter for Python test files that detects state-anchored oracles: assertions whose expected value flows from the system under test (self-comparison, direct anchor, tautological round-trip, snapshot-from-SUT, identity oracle, repr round-trip, fixture-from-SUT, mock-echoes-input, assertion-under-except-pass, vacuous condition); emits a structured verdict (healthy | needs-attention | unhealthy | unknown) with JSON output for CI.",
+  "problem": "arXiv 2608.17214 ('Oracles That Cannot Fail: The Anchoring Problem', 2026-08-17) shows that a test oracle whose expected value derives from the system it is judging cannot fail: if a fault moves measurement and expectation together, the comparison cancels and no generated input reveals it. Measured on a deployed air traffic control simulator (12 property suites, 4 modules, 366 mutants), re-anchoring one holding oracle to published procedure (with no production-code change) recovered 8 of 46 previously-missed mutants. State-anchored oracles are common in real Python test suites and are invisible to existing lint tooling (ruff / pylint / flake8) because the smell is semantic-over-test-structure, not syntactic. oraclecheck is the small offline pre-flight primitive that operationalizes that measurement: it scans test files with the stdlib ast module and flags ten anchoring shapes at INFO / MEDIUM / HIGH severities, then rolls the findings up to a structured verdict. Ten documented rules cover self-comparison (ORACLE-001), direct anchor (ORACLE-002), tautological round-trip (ORACLE-003), snapshot-from-SUT (ORACLE-004), identity oracle (ORACLE-005), repr/str round-trip (ORACLE-006), fixture-from-SUT (ORACLE-007), mock-echoes-input (ORACLE-008), assertion-under-except-pass (ORACLE-009), and vacuous condition (ORACLE-010). Composes with the existing lab hygiene-linter family as the test-oracle-shape layer alongside skillcheck (agent-skill safety) and agentmdlint (agent-instruction maintainability).",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install .",
+  "deps": [],
+  "license": "MIT"
+}

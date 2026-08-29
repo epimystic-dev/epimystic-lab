@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oraclecheck"
+version = "0.1.0"
+description = "Offline linter for Python test files that detects state-anchored oracles: assertions whose expected value flows from the system under test, so the comparison cancels under mutation and cannot fail."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Epimystic" }]
+keywords = ["testing", "lint", "oracle", "mutation-testing", "static-analysis", "ast"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.scripts]
+oraclecheck = "oraclecheck.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["oraclecheck*"]
+exclude = ["tests*", "examples*"]
