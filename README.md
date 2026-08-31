@@ -28,6 +28,8 @@ Small, offline, zero-dependency (stdlib-only) hygiene utilities. Each folder has
 | [`licensechain`](projects/2026-07-26_licensechain/) | Offline license-chain linter for `dataset -> model -> app` supply | Install manifests |
 | [`aicontribcheck`](projects/2026-08-02_aicontribcheck/) | Offline AI-contribution-policy detector for a repo checkout | Repo policy |
 | [`skillcheck`](projects/2026-08-09_skillcheck/) | Offline safety linter for agent skill files (SKILL.md / AGENTS.md / skills/ / *.skill.md) | Agent skills |
+| [`agentmdlint`](projects/2026-08-16_agentmdlint/) | Maintainability linter for agent instruction files (bloat, duplicates, drift markers) | Agent skills |
+| [`oraclecheck`](projects/2026-08-23_oraclecheck/) | AST linter for Python tests: finds oracles anchored to the code under test | Test quality |
 | [`seedline`](projects/2026-06-29_seedline/) | One `seed_all(n)` that seeds Python / NumPy / PyTorch RNGs | Reproducibility (lib) |
 
 ## How it is made (and what that means)
