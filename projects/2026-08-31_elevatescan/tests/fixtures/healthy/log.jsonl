@@ -1,0 +1,3 @@
+{"ts": "2026-08-24T09:00:00Z", "event": "build_started", "actor": "ci"}
+{"ts": "2026-08-24T09:04:22Z", "event": "tests_passed", "count": 128}
+{"ts": "2026-08-24T09:04:30Z", "event": "artifact_uploaded", "size": 4711}
