@@ -31,6 +31,7 @@ Small, offline, zero-dependency (stdlib-only) hygiene utilities. Each folder has
 | [`agentmdlint`](projects/2026-08-16_agentmdlint/) | Maintainability linter for agent instruction files (bloat, duplicates, drift markers) | Agent skills |
 | [`oraclecheck`](projects/2026-08-23_oraclecheck/) | AST linter for Python tests: finds oracles anchored to the code under test | Test quality |
 | [`elevatescan`](projects/2026-08-31_elevatescan/) | Static scanner for instruction-privilege-escalation shapes in agent-consumed content | Agent-consumed content |
+| [`delegcheck`](projects/2026-09-06_delegcheck/) | Static linter for agent-delegation config files (MCP-style descriptors, agent manifests, tool registries) | Agent-delegation config |
 | [`seedline`](projects/2026-06-29_seedline/) | One `seed_all(n)` that seeds Python / NumPy / PyTorch RNGs | Reproducibility (lib) |
 
 ## How it is made (and what that means)
