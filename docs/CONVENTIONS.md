@@ -6,7 +6,8 @@ can rely on **today**, evidence-gathered from every published tool on 2026-08-11
 names the divergences that a future convergence pass will close.
 
 Tools in scope: `jsonlcheck`, `envcheck`, `jwtcheck`, `reqcheck`, `licensechain`,
-`aicontribcheck`, `skillcheck`, `agentmdlint`, `oraclecheck`, `elevatescan`.
+`aicontribcheck`, `skillcheck`, `agentmdlint`, `oraclecheck`, `elevatescan`,
+`delegcheck`.
 `seedline` is a library (no CLI); `jsonldiff` and `jsonlsample` are
 data-transformation tools rather than linters and follow only the invocation and
 stdout/stderr rules below.
@@ -27,9 +28,9 @@ Every linter is invokable as `python -m <tool>`, with `argparse`-style flags. Th
 severity filter). `rc != 0` iff the tool has something the CI job should notice -
 findings, unreadable input, or an internal error. A CI script that only cares
 "did anything worth attention happen" can rely on `test $? -eq 0` uniformly across
-all ten tools.
+all eleven tools.
 
-Evidence (rows 1-7 run 2026-08-11; rows 8-9 run 2026-09-02; row 10 run 2026-09-04):
+Evidence (rows 1-7 run 2026-08-11; rows 8-9 run 2026-09-02; row 10 run 2026-09-04; row 11 run 2026-09-11):
 
 | Tool           | Clean input command                                       | Findings command                                        | Clean rc | Findings rc |
 |----------------|-----------------------------------------------------------|---------------------------------------------------------|----------|-------------|
@@ -43,6 +44,7 @@ Evidence (rows 1-7 run 2026-08-11; rows 8-9 run 2026-09-02; row 10 run 2026-09-0
 | agentmdlint    | `python -m agentmdlint examples/healthy_AGENTS.md`        | `python -m agentmdlint examples/unhealthy_AGENTS.md`    | 0        | 2           |
 | oraclecheck    | `python -m oraclecheck examples/healthy_test.py`          | `python -m oraclecheck examples/unhealthy_test.py`      | 0        | 2           |
 | elevatescan    | `python -m elevatescan examples/healthy_notes.md`         | `python -m elevatescan examples/malicious_notes.md`     | 0        | 2           |
+| delegcheck     | `python -m delegcheck examples/healthy_delegation.json`   | `python -m delegcheck examples/weak_delegation.json`    | 0        | 2           |
 
 *`aicontribcheck` and `skillcheck` return `1` on a "clean" run against most inputs
 because their exit codes encode a *verdict* (allowed / unknown / banned or
@@ -50,16 +52,16 @@ safe / unknown / unsafe) rather than a finding count - a caller wanting a strict
 `0` requires an explicit allowed/safe verdict from the tool. This is a deliberate
 verdict-based encoding, not a divergence to fix.
 
-The last three rows also encode a verdict rollup (`healthy` / `needs-attention` /
+The last four rows also encode a verdict rollup (`healthy` / `needs-attention` /
 `unhealthy`), but the rollup is derived from severity so their clean-input rc is
 `0`. See the Convention B entry below for the shared severity mapping.
 
 Each row's "Findings command" is additionally locked by `tests/test_shared_contract.py`
 inside the tool: help returns rc 0, the clean command returns rc 0 (with the
 `aicontribcheck` / `skillcheck` verdict caveat), and the findings command returns
-non-zero. All ten tests further assert a tool-specific anchor beyond bare rc so
+non-zero. All eleven tests further assert a tool-specific anchor beyond bare rc so
 a false-pass from an unrelated non-zero rc (a missing `__main__.py`, an argparse
-rejection of an unknown flag) cannot pass by accident. Nine anchor a
+rejection of an unknown flag) cannot pass by accident. Ten anchor a
 tool-specific rule code on stdout; `jsonlcheck` anchors the offending filename
 on stderr (its stdout is empty on the findings run so the stderr diagnostic is
 the shape available to lock):
@@ -75,6 +77,7 @@ the shape available to lock):
 | agentmdlint    | `AGENTMD-008` on stdout                                  |
 | oraclecheck    | `ORACLE-001` on stdout                                   |
 | elevatescan    | `ESC-001` on stdout                                      |
+| delegcheck     | `DEL-001` on stdout                                      |
 | jsonlcheck     | `bad.jsonl` on stderr (filename anchor, not a rule code) |
 
 Read the anchor column as a "the tool actually ran" witness paired with the
@@ -89,10 +92,10 @@ Tools split between two conventions when a finding is present:
   usage/IO error. Followed by `jsonlcheck` and `envcheck`.
 - **Convention B - severity-tiered.** `rc=1` for warnings only, `rc=2` for errors
   OR unrecoverable IO. Followed by `jwtcheck`, `reqcheck`, `licensechain`,
-  `agentmdlint`, `oraclecheck`, `elevatescan`. The last three roll findings into
-  an explicit verdict (`healthy` / `needs-attention` / `unhealthy`) whose rc
-  mapping is `0 / 1 / 2` - a verdict wrapper over the same severity tiers, not a
-  separate convention.
+  `agentmdlint`, `oraclecheck`, `elevatescan`, `delegcheck`. The last four roll
+  findings into an explicit verdict (`healthy` / `needs-attention` / `unhealthy`)
+  whose rc mapping is `0 / 1 / 2` - a verdict wrapper over the same severity
+  tiers, not a separate convention.
 - **Convention C - verdict-based.** `rc` reflects a policy verdict rather than
   finding severity: `1` = `unknown` / `conditional`, `2` = `banned` / `conflict`
   (or `unsafe`). Used by `aicontribcheck` and `skillcheck`. This convention is a
@@ -133,6 +136,7 @@ the next open target.
 | licensechain   | `--json`            | JSON object: `{"source","findings":[...],"summary":{...}}`   |
 | aicontribcheck | `--json`            | JSON object: full `RepoReport` (`files_scanned`, `verdict`, ...) |
 | skillcheck     | `--json`            | JSON object: full report (`files_scanned`, `verdict`, ...)       |
+| delegcheck     | `--json`            | JSON object: full report (`files_scanned`, `verdict`, `counts`, `findings`, ...) |
 
 Consumers should pin the tool version and pin the shape they parse. The next
 convergence pass is expected to standardise on `--json` (boolean) and a wrapping
@@ -149,12 +153,12 @@ per tool, not a silent shape change.
 
 ## `--version`
 
-Present on all ten linters (`jsonlcheck`, `envcheck`, `jwtcheck`, `reqcheck`,
+Present on all eleven linters (`jsonlcheck`, `envcheck`, `jwtcheck`, `reqcheck`,
 `licensechain`, `aicontribcheck`, `skillcheck`, `agentmdlint`, `oraclecheck`,
-`elevatescan`) and prints `<tool> <version>` then exits `0`. The `envcheck` and
-`reqcheck` additions landed 2026-08-12 and closed the earlier parity gap;
-`agentmdlint`, `oraclecheck`, and `elevatescan` shipped `--version` from their
-first published release.
+`elevatescan`, `delegcheck`) and prints `<tool> <version>` then exits `0`. The
+`envcheck` and `reqcheck` additions landed 2026-08-12 and closed the earlier
+parity gap; `agentmdlint`, `oraclecheck`, `elevatescan`, and `delegcheck` shipped
+`--version` from their first published release.
 
 ## Input encoding
 
@@ -186,7 +190,8 @@ On the maintenance backlog:
   `summary`).
 - Bring severity-based linters onto Convention B (severity-tiered exit codes).
 - ~~Add a per-tool test asserting the shared-invariants section above.~~ Done
-  2026-09-03: all ten linters carry `tests/test_shared_contract.py` locking the
-  three invariants (jsonlcheck / envcheck / jwtcheck / reqcheck / licensechain /
-  aicontribcheck / skillcheck across 2026-08-19..2026-08-27; `agentmdlint`
-  2026-08-29; `oraclecheck` 2026-09-01; `elevatescan` 2026-09-03).
+  2026-09-09: all eleven linters carry `tests/test_shared_contract.py` locking
+  the three invariants (jsonlcheck / envcheck / jwtcheck / reqcheck /
+  licensechain / aicontribcheck / skillcheck across 2026-08-19..2026-08-27;
+  `agentmdlint` 2026-08-29; `oraclecheck` 2026-09-01; `elevatescan` 2026-09-03;
+  `delegcheck` 2026-09-09).
