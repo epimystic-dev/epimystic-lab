@@ -109,9 +109,31 @@ release rather than as silent drift.
 
 ### `--strict`
 
-Where a tool exposes `--strict` (`reqcheck`, `licensechain`, `aicontribcheck`,
-`skillcheck`), the flag promotes lower-severity findings to error for exit-code
-purposes. `jwtcheck` exposes an equivalent knob via `--severity error`.
+Eight of the eleven linters expose `--strict`, though the semantic differs
+across three families. `jwtcheck` exposes an equivalent knob via
+`--severity error`. `jsonlcheck` and `envcheck` do not expose `--strict`; a
+finding is a finding under their severity-blind exit code (Convention A).
+
+Evidence (run 2026-09-12; `--strict` behaviour quoted verbatim from each
+tool's `python -m <tool> --help` output):
+
+| Tool           | Family              | `--strict` behaviour                                       |
+|----------------|---------------------|------------------------------------------------------------|
+| reqcheck       | severity-tiered     | treat warnings as errors (exit 2 on any warning)           |
+| licensechain   | severity-tiered     | promote warnings to errors for exit-code purposes          |
+| aicontribcheck | verdict-based       | treat `unknown` verdict as failure (exit 2)                |
+| skillcheck     | verdict-based       | treat `unknown` verdict as an unsafe exit (2 instead of 1) |
+| agentmdlint    | verdict-rollup      | escalate info-only and no-file-found outcomes to nonzero   |
+| oraclecheck    | verdict-rollup      | escalate INFO findings and no-files-scanned to exit 1 / 2  |
+| elevatescan    | verdict-rollup      | INFO -> `needs-attention`; no-files -> exit 2              |
+| delegcheck     | verdict-rollup      | escalate INFO to `needs-attention`; no-files to exit 2     |
+
+The severity-tiered pair (`reqcheck`, `licensechain`) escalate warnings; the
+verdict-based pair (`aicontribcheck`, `skillcheck`) escalate an `unknown`
+verdict; the four verdict-rollup tools (`agentmdlint`, `oraclecheck`,
+`elevatescan`, `delegcheck`) escalate INFO findings and the no-input case.
+Callers relying on `--strict` should read the per-tool `--help` to know which
+of the three the flag maps to.
 
 ## Structured output
 
