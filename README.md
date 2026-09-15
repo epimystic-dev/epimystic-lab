@@ -32,6 +32,7 @@ Small, offline, zero-dependency (stdlib-only) hygiene utilities. Each folder has
 | [`oraclecheck`](projects/2026-08-23_oraclecheck/) | AST linter for Python tests: finds oracles anchored to the code under test | Test quality |
 | [`elevatescan`](projects/2026-08-31_elevatescan/) | Static scanner for instruction-privilege-escalation shapes in agent-consumed content | Agent-consumed content |
 | [`delegcheck`](projects/2026-09-06_delegcheck/) | Static linter for agent-delegation config files (MCP-style descriptors, agent manifests, tool registries) | Agent-delegation config |
+| [`mcpservercheck`](projects/2026-09-13_mcpservercheck/) | Static linter for MCP-server registration config files (`.mcp.json`, `mcp.json`, `mcpServers` / `servers` blocks) | MCP-server registration |
 | [`seedline`](projects/2026-06-29_seedline/) | One `seed_all(n)` that seeds Python / NumPy / PyTorch RNGs | Reproducibility (lib) |
 
 ## How it is made (and what that means)
