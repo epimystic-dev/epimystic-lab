@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "/usr/local/bin/mcp-server-github",
+      "args": ["--stdio"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "GitHub API access via MCP."
+    },
+    "filesystem": {
+      "command": "/usr/local/bin/mcp-server-filesystem",
+      "args": ["--root", "/Users/example/projects"],
+      "description": "Read-only filesystem access, rooted at ~/projects."
+    },
+    "remote": {
+      "url": "https://mcp.example.com/sse",
+      "description": "Remote MCP endpoint over HTTPS."
+    }
+  }
+}

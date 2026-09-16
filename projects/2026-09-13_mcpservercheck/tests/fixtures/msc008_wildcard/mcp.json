@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "wildcard-perm": {
+      "command": "/usr/local/bin/server",
+      "allowedTools": ["*"]
+    }
+  }
+}

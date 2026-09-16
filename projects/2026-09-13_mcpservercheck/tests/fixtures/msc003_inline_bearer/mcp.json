@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "leaks-token": {
+      "command": "/usr/local/bin/server",
+      "env": {
+        "MY_HANDLE": "sk-abc12345"
+      }
+    }
+  }
+}

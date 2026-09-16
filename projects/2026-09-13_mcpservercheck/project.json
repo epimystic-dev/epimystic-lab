@@ -1,0 +1,11 @@
+{
+  "name": "mcpservercheck",
+  "slug": "2026-09-13_mcpservercheck",
+  "one_liner": "Offline static linter for MCP-server registration config files (.mcp.json, mcp.json, and the mcpServers / servers blocks that MCP clients read on install).",
+  "problem": "MCP-server registration configs (client-side files a user pastes to install a server) are attack surface: they can name a shell interpreter with an inline eval flag, ship a plaintext http:// transport, embed a bearer literal in an env value, remote-fetch-and-execute in the command line, be structurally incomplete, reference an unpinned package, put a credential-shaped env key with an inline value, wildcard permissions, execute from a world-writable temp directory, or use a bare binary name subject to PATH-hijack. mcpservercheck reads the JSON/JSONL registration file the client will consume and flags ten shape defects with deterministic rules.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install -e .",
+  "deps": [],
+  "license": "MIT"
+}

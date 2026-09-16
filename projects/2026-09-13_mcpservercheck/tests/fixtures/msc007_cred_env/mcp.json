@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "inline-cred": {
+      "command": "/usr/local/bin/server",
+      "env": {
+        "DB_PASSWORD": "s3cret-value"
+      }
+    }
+  }
+}

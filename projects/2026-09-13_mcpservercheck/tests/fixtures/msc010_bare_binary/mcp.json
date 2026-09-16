@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "bare-name": {
+      "command": "my-mcp-server",
+      "args": ["--stdio"],
+      "description": "The command 'my-mcp-server' is subject to PATH lookup.",
+      "env": {"MY_TOKEN": "${MY_TOKEN}"}
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "plaintext": {
+      "url": "http://mcp.example.com/sse"
+    }
+  }
+}

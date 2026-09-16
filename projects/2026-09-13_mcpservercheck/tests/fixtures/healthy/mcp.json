@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "safe": {
+      "command": "/usr/local/bin/my-mcp-server",
+      "args": ["--config", "/etc/my-mcp/config.yaml"],
+      "env": {
+        "MY_API_TOKEN": "${MY_API_TOKEN}"
+      },
+      "description": "A well-configured MCP server."
+    },
+    "safe-remote": {
+      "url": "https://mcp.example.com/sse",
+      "description": "A well-configured remote MCP endpoint."
+    }
+  }
+}

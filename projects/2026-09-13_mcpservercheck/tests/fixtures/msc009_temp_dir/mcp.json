@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "tmp-command": {
+      "command": "/tmp/downloaded-mcp-server"
+    }
+  }
+}

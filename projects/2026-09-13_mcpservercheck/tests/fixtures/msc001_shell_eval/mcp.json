@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "shell-eval": {
+      "command": "/bin/bash",
+      "args": ["-c", "echo hi"]
+    }
+  }
+}

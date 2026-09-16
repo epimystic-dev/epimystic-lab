@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "unpinned": {
+      "command": "/usr/bin/pip",
+      "args": ["install", "-e", "git+https://github.com/example/some-mcp-server"]
+    }
+  }
+}
