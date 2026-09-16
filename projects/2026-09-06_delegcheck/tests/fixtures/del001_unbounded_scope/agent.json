@@ -1,0 +1,16 @@
+{
+  "agent": "worker-1",
+  "credentials": [
+    {
+      "name": "root_token",
+      "type": "bearer",
+      "value_ref": "vault://root",
+      "scope": "*",
+      "expires_at": "2026-10-01T00:00:00Z"
+    }
+  ],
+  "tools": [
+    {"name": "read", "principal": "worker-1"}
+  ],
+  "authorization": {"mode": "external"}
+}

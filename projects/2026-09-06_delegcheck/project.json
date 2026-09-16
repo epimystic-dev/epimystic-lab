@@ -1,0 +1,11 @@
+{
+  "name": "delegcheck",
+  "slug": "2026-09-06_delegcheck",
+  "one_liner": "Offline static linter for agent-delegation configuration files (MCP-style descriptors, agent manifests, tool registries).",
+  "problem": "Agent harnesses increasingly delegate authority across principals (orchestrator -> worker, worker -> sub-agent, agent -> MCP tool). When the delegation configuration itself is shape-defective - bearer credentials without scope or expiry, tools without a principal identity, authorization gated inside the model, parent credentials reused verbatim, delegation edges without a depth cap, wildcard callers, cross-principal edges marked as internal trust, or delegation cycles - the runtime authorization layer inherits a structural weakness that cannot be recovered at request time. delegcheck reads the JSON/JSONL delegation config the harness will consume and flags ten shape defects with deterministic rules.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install -e .",
+  "deps": [],
+  "license": "MIT"
+}

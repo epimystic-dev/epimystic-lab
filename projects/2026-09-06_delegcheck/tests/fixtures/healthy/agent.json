@@ -1,0 +1,33 @@
+{
+  "agent": "worker-1",
+  "credentials": [
+    {
+      "name": "issues_reader",
+      "type": "bearer",
+      "value_ref": "vault://issues_reader",
+      "scope": "read:issues",
+      "expires_at": "2026-10-01T00:00:00Z"
+    }
+  ],
+  "tools": [
+    {
+      "name": "list_issues",
+      "principal": "worker-1",
+      "permitted_agents": ["worker-1"]
+    }
+  ],
+  "delegations": [
+    {
+      "from": "orchestrator",
+      "to": "worker-1",
+      "credential_ref": "issues_reader",
+      "narrowed_scope": "read:issues:public",
+      "max_depth": 1,
+      "trust_boundary": "external"
+    }
+  ],
+  "authorization": {
+    "mode": "external",
+    "gate": "policy-engine"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "agent": "orchestrator",
+  "credentials": [
+    {
+      "name": "root_token",
+      "type": "bearer",
+      "value_ref": "vault://root",
+      "scope": "*"
+    }
+  ],
+  "tools": [
+    {
+      "name": "shell_exec",
+      "permitted_agents": ["*"]
+    },
+    {
+      "name": "http_call"
+    }
+  ],
+  "delegations": [
+    {
+      "from": "orchestrator",
+      "to": "worker-1",
+      "credential_ref": "root_token",
+      "trust_boundary": "internal"
+    },
+    {
+      "from": "worker-1",
+      "to": "orchestrator",
+      "trust_boundary": "internal"
+    }
+  ],
+  "authorization": {
+    "mode": "llm",
+    "gate": "agent-decides"
+  }
+}

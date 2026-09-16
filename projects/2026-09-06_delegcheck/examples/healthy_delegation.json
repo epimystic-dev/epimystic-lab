@@ -1,0 +1,33 @@
+{
+  "agent": "reviewer-1",
+  "credentials": [
+    {
+      "name": "issues_reader",
+      "type": "bearer",
+      "value_ref": "vault://issues_reader",
+      "scope": "read:issues",
+      "expires_at": "2026-10-01T00:00:00Z"
+    }
+  ],
+  "tools": [
+    {
+      "name": "list_issues",
+      "principal": "reviewer-1",
+      "permitted_agents": ["reviewer-1"]
+    }
+  ],
+  "delegations": [
+    {
+      "from": "orchestrator",
+      "to": "reviewer-1",
+      "credential_ref": "issues_reader",
+      "narrowed_scope": "read:issues:public",
+      "max_depth": 1,
+      "trust_boundary": "external"
+    }
+  ],
+  "authorization": {
+    "mode": "external",
+    "gate": "policy-engine"
+  }
+}

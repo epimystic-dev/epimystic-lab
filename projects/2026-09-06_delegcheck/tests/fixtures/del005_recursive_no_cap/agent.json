@@ -1,0 +1,11 @@
+{
+  "agent": "orchestrator",
+  "delegations": [
+    {
+      "from": "orchestrator",
+      "to": "worker-1",
+      "trust_boundary": "external"
+    }
+  ],
+  "authorization": {"mode": "external"}
+}

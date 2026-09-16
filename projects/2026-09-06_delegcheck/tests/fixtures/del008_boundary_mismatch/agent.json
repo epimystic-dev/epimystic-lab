@@ -1,0 +1,22 @@
+{
+  "agent": "orchestrator",
+  "delegations": [
+    {
+      "from": "orchestrator",
+      "to": "external-provider",
+      "credential_ref": "outbound_token",
+      "narrowed_scope": "read:public",
+      "max_depth": 1,
+      "trust_boundary": "internal"
+    }
+  ],
+  "credentials": [
+    {
+      "name": "outbound_token",
+      "type": "bearer",
+      "value_ref": "vault://outbound_token",
+      "scope": "read:public",
+      "expires_at": "2026-10-01T00:00:00Z"
+    }
+  ]
+}

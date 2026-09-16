@@ -1,0 +1,8 @@
+{
+  "agent": "orchestrator",
+  "delegations": [
+    {"from": "a", "to": "b", "max_depth": 1, "trust_boundary": "external"},
+    {"from": "b", "to": "c", "max_depth": 1, "trust_boundary": "external"},
+    {"from": "c", "to": "a", "max_depth": 1, "trust_boundary": "external"}
+  ]
+}

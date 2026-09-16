@@ -1,0 +1,11 @@
+{
+  "agent": "worker-1",
+  "credentials": [
+    {
+      "name": "issues_reader",
+      "type": "bearer",
+      "value_ref": "vault://issues_reader",
+      "scope": "read:issues"
+    }
+  ]
+}

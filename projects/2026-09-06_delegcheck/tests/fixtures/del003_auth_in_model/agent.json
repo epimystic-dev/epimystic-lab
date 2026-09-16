@@ -1,0 +1,7 @@
+{
+  "agent": "worker-1",
+  "authorization": {
+    "mode": "llm",
+    "gate": "agent-decides"
+  }
+}

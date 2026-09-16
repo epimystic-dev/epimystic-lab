@@ -1,0 +1,6 @@
+{
+  "agent": "worker-1",
+  "tools": [
+    {"name": "shell", "permitted_agents": ["worker-1"]}
+  ]
+}

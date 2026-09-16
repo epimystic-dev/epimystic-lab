@@ -1,0 +1,10 @@
+{
+  "agent": "orchestrator",
+  "tools": [
+    {
+      "name": "shell_exec",
+      "principal": "orchestrator",
+      "permitted_agents": ["*"]
+    }
+  ]
+}

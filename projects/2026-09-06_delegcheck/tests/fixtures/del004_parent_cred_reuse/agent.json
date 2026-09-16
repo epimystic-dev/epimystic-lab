@@ -1,0 +1,25 @@
+{
+  "agent": "orchestrator",
+  "credentials": [
+    {
+      "name": "org_token",
+      "type": "bearer",
+      "value_ref": "vault://org_token",
+      "scope": "read:issues,write:issues",
+      "expires_at": "2026-10-01T00:00:00Z"
+    }
+  ],
+  "tools": [
+    {"name": "issue_ops", "principal": "orchestrator"}
+  ],
+  "delegations": [
+    {
+      "from": "orchestrator",
+      "to": "worker-1",
+      "credential_ref": "org_token",
+      "max_depth": 1,
+      "trust_boundary": "external"
+    }
+  ],
+  "authorization": {"mode": "external"}
+}
