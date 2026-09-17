@@ -161,6 +161,9 @@ the next open target.
 | licensechain   | `--json`            | JSON object: `{"source","findings":[...],"summary":{...}}`   |
 | aicontribcheck | `--json`            | JSON object: full `RepoReport` (`files_scanned`, `verdict`, ...) |
 | skillcheck     | `--json`            | JSON object: full report (`files_scanned`, `verdict`, ...)       |
+| agentmdlint    | `--json`            | JSON object: full report (`tool`, `version`, `root`, `files`, `findings`, `summary`, `verdict`, `exit_code`) |
+| oraclecheck    | `--json`            | JSON object: full report (`files_scanned`, `files_errored`, `findings`, `findings_total`, `findings_visible`, `verdict`, `errors`, `exit_code`) |
+| elevatescan    | `--json`            | JSON object: full report (`files_scanned`, `findings`, `findings_total`, `findings_visible`, `counts`, `verdict`, `errors`) |
 | delegcheck     | `--json`            | JSON object: full report (`files_scanned`, `verdict`, `counts`, `findings`, ...) |
 | mcpservercheck | `--json`            | JSON object: full report (`files_scanned`, `verdict`, `counts`, `findings`, ...) |
 
