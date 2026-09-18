@@ -1,0 +1,12 @@
+{
+  "name": "nbshape",
+  "slug": "2026-09-18_nbshape",
+  "one_liner": "Reproducibility-hygiene linter for Jupyter notebook JSON - flags out-of-order execution counters, retained outputs, unseeded sampling, machine-local paths, and credential-shaped literals, without executing anything.",
+  "problem": "Computational notebooks are the dominant artifact for shared ML and scientific work and they are measurably broken: only 26% of 12,106 Kaggle ML notebooks remain reproducible (arXiv 2602.07195), and automated containerization of 443 scholarly notebooks resolved 66.7% of dependency failures yet still left 53.7% with low output fidelity (arXiv 2604.01072) - which means fixing the environment does not fix the notebook. The residual defects are in-notebook shapes: cells executed in an order the file does not record, outputs retained from a kernel state that no longer exists, sampling calls with no seed, and absolute paths to a drive only the author has. All of them are visible in the .ipynb JSON without executing a cell. nbshape reads that JSON and reports eighteen shape defects with deterministic rules.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install -e .",
+  "deps": [],
+  "license": "MIT",
+  "clean_room": "Rules are derived from the nbformat v4 JSON schema and from the findings reported in the cited papers only. The rule tables and source of pynblint, julynter, nbqa, and nbstripout were not read, vendored, or mirrored; they are cited as related work. The tool is named nbshape rather than nbcheck because nbcheck is a live PyPI package (0.0.5, 2026-07-22) wrapping the nbformat validator, a function that overlaps this tool's NBK-010 gate."
+}
