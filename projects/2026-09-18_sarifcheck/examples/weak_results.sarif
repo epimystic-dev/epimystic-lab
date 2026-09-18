@@ -1,0 +1,93 @@
+{
+  "$schema": "https://example.invalid/schemas/sarif-schema-2.0.0.json",
+  "version": "2.1",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "WeakScanner",
+          "rules": [
+            {
+              "id": "WK001",
+              "shortDescription": { "text": "Weak rule." }
+            }
+          ]
+        }
+      },
+      "originalUriBaseSTUB": "see originalUriBaseIds below",
+      "originalUriBaseIds": {
+        "SRCROOT": { "uri": "relative/not/absolute/", "uriBaseId": "REPOROOT" }
+      },
+      "invocations": [
+        { "workingDirectory": { "uri": "file:///home/devuser/ci/workspace/" } }
+      ],
+      "artifacts": [
+        { "location": { "uri": "file:///home/devuser/ci/workspace/src/app.py" } }
+      ],
+      "results": [
+        {
+          "ruleId": "WK001",
+          "ruleIndex": 7,
+          "kind": "informational",
+          "level": "error",
+          "message": {
+            "text": "Unsafe call found in C:\\Users\\devuser\\build\\src\\app.py near the request handler."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "file:///home/devuser/ci/workspace/src/app.py" },
+                "region": { "startLine": 0, "startColumn": -3 }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "WK999",
+          "message": { "text": "Rule identifier does not resolve to any descriptor." },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "src\\app with space\\handler.py", "uriBaseId": "MISSINGBASE" },
+                "region": { "startLine": 12 }
+              }
+            }
+          ]
+        },
+        {
+          "message": { "text": "No rule reference of any kind on this result." },
+          "locations": []
+        },
+        {
+          "ruleId": "WK001",
+          "ruleIndex": 0,
+          "kind": "fail",
+          "message": { "id": "noSuchMessageKey" },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "src/app.py", "uriBaseId": "SRCROOT" },
+                "region": { "startLine": 3 }
+              }
+            }
+          ],
+          "fixes": [
+            {
+              "description": { "text": "Apply the suggested change." },
+              "artifactChanges": [
+                {
+                  "artifactLocation": { "uri": "src/app.py", "uriBaseId": "SRCROOT" },
+                  "replacements": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tool": { "driver": { "name": "WeakScanner" } },
+      "results": []
+    }
+  ]
+}

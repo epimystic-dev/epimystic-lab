@@ -1,0 +1,6 @@
+This directory deliberately holds no SARIF file.
+
+A directory scan over it discovers zero files, which rolls up to verdict
+"unknown": exit 1 by default and exit 2 under --strict. The point of the
+fixture is that "I found nothing to look at" and "I looked and it was
+clean" are different outcomes and must not share an exit code.

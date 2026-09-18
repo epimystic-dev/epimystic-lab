@@ -1,0 +1,12 @@
+{
+  "name": "sarifcheck",
+  "slug": "2026-09-18_sarifcheck",
+  "one_liner": "Offline static linter for SARIF 2.1.0 result files - flags absolute host paths, unresolvable rule references, missing fingerprints, and the documented ingest ceilings that silently truncate or reject a report.",
+  "problem": "SARIF is the OASIS interchange format that security scanners emit and code-scanning platforms ingest. A SARIF file can be well-formed JSON and still be unusable: it can exceed a documented ingest ceiling and be truncated or rejected, carry absolute filesystem paths that never map back to repository files so every finding lands on no line of code, reference rule metadata that is not present in the file, or omit the partialFingerprints that let a consumer deduplicate an alert across re-uploads. Each produces the same outcome - the scan ran, the upload was accepted, and the findings are not where anyone will look. sarifcheck reads the file before it is uploaded and reports twenty-five shape defects with deterministic rules.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install -e .",
+  "deps": [],
+  "license": "MIT",
+  "clean_room": "Rules are derived from the OASIS SARIF 2.1.0 specification text and from publicly documented consumer ingest limits and troubleshooting pages only. No reference implementation of a SARIF validator was read, vendored, or mirrored. The tool is an independent implementation and is not affiliated with or endorsed by OASIS or by any scanner or platform named in the README."
+}

@@ -1,0 +1,23 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": { "driver": { "name": "FixtureScanner", "semanticVersion": "1.0.0", "rules": [
+        { "id": "FX001", "shortDescription": { "text": "S." }, "fullDescription": { "text": "F." }, "help": { "text": "H." } }
+      ] } },
+      "automationDetails": { "id": "fixture/srf003" },
+      "versionControlProvenance": [ { "repositoryUri": "https://example.invalid/a/b", "revisionId": "0000000000000000000000000000000000000000" } ],
+      "originalUriBaseIds": { "SRCROOT": { "uri": "file:///build/workspace/" } },
+      "results": [
+        {
+          "ruleId": "FX001", "ruleIndex": 0, "kind": "fail", "level": "warning",
+          "message": { "text": "Finding." },
+          "partialFingerprints": { "primaryLocationLineHash": "1111222233334444:1" },
+          "locations": [ { "physicalLocation": {
+            "artifactLocation": { "uri": "src/a.py", "uriBaseId": "SRCROOT" },
+            "region": { "startLine": 1 } } } ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "ExampleScanner",
+          "semanticVersion": "1.4.2",
+          "informationUri": "https://example.invalid/examplescanner",
+          "rules": [
+            {
+              "id": "EX1001",
+              "name": "HardcodedTimeout",
+              "shortDescription": { "text": "Hardcoded timeout value." },
+              "fullDescription": {
+                "text": "A timeout is written as a literal instead of being read from configuration, so it cannot be tuned per environment."
+              },
+              "help": {
+                "text": "Move the timeout into configuration and read it at startup."
+              },
+              "properties": { "tags": ["maintainability", "configuration"] }
+            },
+            {
+              "id": "EX1002",
+              "name": "UncheckedReturnValue",
+              "shortDescription": { "text": "Return value is not checked." },
+              "fullDescription": {
+                "text": "The return value of a call that can fail is discarded, so a failure is silently ignored."
+              },
+              "help": {
+                "text": "Check the return value and handle the failure path explicitly."
+              },
+              "properties": { "tags": ["correctness"] }
+            }
+          ]
+        }
+      },
+      "automationDetails": { "id": "example-scan/nightly" },
+      "versionControlProvenance": [
+        {
+          "repositoryUri": "https://example.invalid/acme/widget",
+          "revisionId": "0000000000000000000000000000000000000000",
+          "branch": "refs/heads/main"
+        }
+      ],
+      "originalUriBaseIds": {
+        "SRCROOT": { "uri": "file:///build/workspace/" }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "workingDirectory": { "uri": "file:///build/workspace/" }
+        }
+      ],
+      "artifacts": [
+        { "location": { "uri": "src/widget/timeout.py", "uriBaseId": "SRCROOT" } },
+        { "location": { "uri": "src/widget/client.py", "uriBaseId": "SRCROOT" } }
+      ],
+      "results": [
+        {
+          "ruleId": "EX1001",
+          "ruleIndex": 0,
+          "level": "warning",
+          "kind": "fail",
+          "message": { "text": "Timeout is hardcoded to 30 seconds." },
+          "partialFingerprints": { "primaryLocationLineHash": "1a2b3c4d5e6f7081:1" },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "src/widget/timeout.py", "uriBaseId": "SRCROOT" },
+                "region": { "startLine": 42, "startColumn": 5, "endLine": 42, "endColumn": 24 }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "EX1002",
+          "ruleIndex": 1,
+          "level": "error",
+          "kind": "fail",
+          "message": { "text": "Return value of send() is discarded." },
+          "partialFingerprints": { "primaryLocationLineHash": "90abcdef12345678:1" },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "src/widget/client.py", "uriBaseId": "SRCROOT" },
+                "region": { "startLine": 117, "startColumn": 9 }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "EX1002",
+          "ruleIndex": 1,
+          "kind": "notApplicable",
+          "level": "none",
+          "message": { "text": "Rule does not apply to generated code in this file." },
+          "partialFingerprints": { "primaryLocationLineHash": "fedcba9876543210:1" },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "src/widget/generated.py", "uriBaseId": "SRCROOT" },
+                "region": { "startLine": 1, "startColumn": 1 }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

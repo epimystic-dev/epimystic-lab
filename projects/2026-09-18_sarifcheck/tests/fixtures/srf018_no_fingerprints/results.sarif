@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": { "driver": { "name": "FixtureScanner", "semanticVersion": "1.0.0", "rules": [
+        { "id": "FX001", "shortDescription": { "text": "S." }, "fullDescription": { "text": "F." }, "help": { "text": "H." } }
+      ] } },
+      "automationDetails": { "id": "fixture/srf018" },
+      "versionControlProvenance": [ { "repositoryUri": "https://example.invalid/a/b", "revisionId": "0000000000000000000000000000000000000000" } ],
+      "originalUriBaseIds": { "SRCROOT": { "uri": "file:///build/workspace/" } },
+      "results": [
+        {
+          "ruleId": "FX001", "ruleIndex": 0, "kind": "fail", "level": "warning",
+          "message": { "text": "Finding with no partialFingerprints." },
+          "locations": [ { "physicalLocation": {
+            "artifactLocation": { "uri": "src/a.py", "uriBaseId": "SRCROOT" },
+            "region": { "startLine": 1 } } } ]
+        }
+      ]
+    }
+  ]
+}

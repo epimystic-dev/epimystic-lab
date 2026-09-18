@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": { "driver": { "name": "FixtureScanner", "semanticVersion": "1.0.0" } },
+      "automationDetails": { "id": "fixture/srf027" },
+      "versionControlProvenance": [ { "repositoryUri": "https://example.invalid/a/b", "revisionId": "0000000000000000000000000000000000000000" } ],
+      "externalPropertyFileReferences": {
+        "results": [ { "location": { "uri": "sidecar-results.sarif-external-properties" } } ],
+        "extensions": [ { "location": { "uri": "sidecar-rules.sarif-external-properties" } } ]
+      },
+      "results": []
+    }
+  ]
+}
