@@ -148,9 +148,11 @@ own chatter mixed in.
 The flag names and JSON top-level shapes still diverge on shape, but the flag
 name is now unified: all three severity-tiered linters (`envcheck` 2026-08-13,
 `jwtcheck` 2026-08-14, `reqcheck` 2026-08-15) accept both `--json` and
-`--format json`, matching the boolean `--json` already shipped by
-`licensechain`, `aicontribcheck`, and `skillcheck`. Shape convergence remains
-the next open target.
+`--format json`, matching the boolean `--json` shipped by `licensechain`
+(2026-07-26), `aicontribcheck` (2026-08-02), `skillcheck` (2026-08-09),
+`agentmdlint` (2026-08-16), `oraclecheck` (2026-08-23), `elevatescan`
+(2026-08-31), `delegcheck` (2026-09-06), and `mcpservercheck` (2026-09-13).
+Shape convergence remains the next open target.
 
 | Tool           | Flag                | Top-level JSON shape                                          |
 |----------------|---------------------|---------------------------------------------------------------|
