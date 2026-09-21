@@ -95,6 +95,8 @@ Findings go to **stdout**; all labels, summaries and diagnostics go to
 | SRF-023 | HIGH | The gzip-compressed size exceeds the documented upload ceiling |
 | SRF-024 | MEDIUM | A shape known to have tripped a real consumer |
 | SRF-025 | INFO | A message text contains a token-shaped string |
+| SRF-026 | INFO | Provenance metadata is absent (`tool.driver.semanticVersion`, `versionControlProvenance`) |
+| SRF-027 | INFO | A run references external property files, so the report is not self-contained |
 
 Run `python -m sarifcheck --list-rules` for the registry as the installed
 version defines it.
