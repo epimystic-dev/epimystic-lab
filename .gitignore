@@ -22,3 +22,7 @@ dist/
 node_modules/
 .venv/
 venv/
+
+# Test scratch: fixtures are written under the checkout to avoid endpoint-scanner
+# interference with IOC-shaped strings; the directory is disposable.
+.pytest_tmp/
