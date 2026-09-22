@@ -35,6 +35,7 @@ Small, offline, zero-dependency (stdlib-only) hygiene utilities. Each folder has
 | [`mcpservercheck`](projects/2026-09-13_mcpservercheck/) | Static linter for MCP-server registration config files (`.mcp.json`, `mcp.json`, `mcpServers` / `servers` blocks) | MCP-server registration |
 | [`sarifcheck`](projects/2026-09-18_sarifcheck/) | Static linter for SARIF 2.1.0 result files (ingest ceilings, absolute host paths, unresolvable rule refs) | Security-scan output |
 | [`nbshape`](projects/2026-09-18_nbshape/) | Reproducibility and disclosure linter for notebook JSON (execution order, retained outputs, committed secrets) | Notebooks |
+| [`pjhookcheck`](projects/2026-09-20_pjhookcheck/) | Static linter for `package.json` lifecycle-hook and install-time supply-chain shapes (fetch-and-exec hooks, url deps, unpinned versions) | Install-time hooks |
 | [`seedline`](projects/2026-06-29_seedline/) | One `seed_all(n)` that seeds Python / NumPy / PyTorch RNGs | Reproducibility (lib) |
 
 ## How it is made (and what that means)

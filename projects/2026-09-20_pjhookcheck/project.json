@@ -1,0 +1,12 @@
+{
+  "name": "pjhookcheck",
+  "slug": "2026-09-20_pjhookcheck",
+  "one_liner": "Offline static linter for package.json lifecycle-hook and install-time supply-chain shapes - flags remote-fetch-and-exec hooks, inline-eval interpreters, url dependency specifiers, unpinned versions, and eight other install-time defects.",
+  "problem": "npm-family package managers execute preinstall / install / postinstall / prepare / prepare-adjacent scripts declared in package.json every time a user runs a plain install. Recent field evidence (arXiv 2609.03884; the AUR 400-package incident reported on Hacker News; Shai-Hulud v2 and pino-SDK-v2 exfiltration campaigns) shows that the hook configuration alone - not any package content - is enough to steer downstream execution. A separate 3,171-repository survey (arXiv 2609.07360) measured a 16 percent security-defect rate in AI-coding-agent configurations, with install-time hooks shipping without a lockfile or a pre-install check. pjhookcheck reads a package.json before it is committed or installed and reports twelve install-time shape defects across lifecycle hooks and dependency specifiers.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install -e .",
+  "deps": [],
+  "license": "MIT",
+  "clean_room": "Rules are derived from public specification text (the npm and pnpm docs on scripts and dependency-URL specifiers), from named public field incidents (the AUR 400-package post-install compromise; the Shai-Hulud v2 and pino-SDK-v2 exfiltration campaigns), and from published research (arXiv 2609.03884 and arXiv 2609.07360). No reference implementation of an install-hook linter was read, vendored, or mirrored. The tool is an independent implementation and is not affiliated with or endorsed by any package manager, registry, or research group."
+}

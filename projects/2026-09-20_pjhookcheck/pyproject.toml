@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pjhookcheck"
+version = "0.1.0"
+description = "Static linter for package.json lifecycle-hook and install-time supply-chain shapes."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+keywords = ["npm", "package.json", "lifecycle-hook", "supply-chain", "linter"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Security",
+]
+
+[project.scripts]
+pjhookcheck = "pjhookcheck.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pjhookcheck*"]
+exclude = ["tests*", "examples*"]
