@@ -97,5 +97,20 @@ class CLIBehavior(CLIFixture):
         self.assertEqual(records[0]["key"], "b")
 
 
+class VersionFlag(unittest.TestCase):
+    """Parity with every other CLI in the lab: `--version` prints
+    `jsonldiff <version>` on stdout and exits 0. CI consumers and the
+    house-invariant checker (`tools/lab_project_check.py`) both rely on it."""
+
+    def test_version_prints_name_and_version_and_exits_zero(self):
+        from jsonldiff import __version__
+        buf_out, buf_err = io.StringIO(), io.StringIO()
+        with redirect_stdout(buf_out), redirect_stderr(buf_err):
+            with self.assertRaises(SystemExit) as cm:
+                main(["--version"])
+        self.assertEqual(cm.exception.code, 0)
+        self.assertEqual(buf_out.getvalue().strip(), f"jsonldiff {__version__}")
+
+
 if __name__ == "__main__":
     unittest.main()

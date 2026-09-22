@@ -7,6 +7,7 @@ import json
 import sys
 from typing import Iterable, Optional, Sequence
 
+from . import __version__
 from .core import Change, diff_streams
 
 
@@ -19,6 +20,11 @@ def _build_parser() -> argparse.ArgumentParser:
             "so ordering and whitespace inside a JSON object no longer "
             "obscures real differences."
         ),
+    )
+    p.add_argument(
+        "--version",
+        action="version",
+        version=f"jsonldiff {__version__}",
     )
     p.add_argument("baseline", help="Baseline JSONL file.")
     p.add_argument("candidate", help="Candidate JSONL file.")
