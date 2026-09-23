@@ -187,10 +187,46 @@ per tool, not a silent shape change.
 
 ## Stdout / stderr discipline
 
+The intended discipline:
+
 - Findings and structured output -> **stdout**.
 - Diagnostics, labels, error prefixes, summary lines -> **stderr**.
 - A silent `rc=0` run should produce no stdout (except structured output when
   requested); tools that print a "no issues" summary do so to stderr.
+
+Empirical clean-run stdout audit (2026-09-23). Every tool was probed against a
+known-clean fixture (the same command anchored in the exit-code evidence table
+above, or the explicit-allow/explicit-safe fixture that resolves each
+verdict-based tool to rc=0), with `--json` NOT requested, and stdout byte count
+captured. `-` = complies (0 bytes on stdout on silent clean run):
+
+| Tool           | Clean fixture                             | Clean rc | Clean stdout                                                                             | Complies |
+|----------------|-------------------------------------------|----------|------------------------------------------------------------------------------------------|----------|
+| jsonlcheck     | `examples/ok.jsonl`                       | 0        | 0 bytes                                                                                  | yes      |
+| envcheck       | `examples/template.env` (twice)           | 0        | 0 bytes                                                                                  | yes      |
+| jwtcheck       | `examples/ok.env`                         | 0        | 0 bytes                                                                                  | yes      |
+| reqcheck       | `examples/ok.txt`                         | 0        | 12 bytes (`no findings`)                                                                 | no       |
+| licensechain   | `examples/ok_chain.json`                  | 0        | 62 bytes (report header + `no findings.`)                                                | no       |
+| aicontribcheck | `tests/fixtures/allow_repo`               | 0        | 256 bytes (5-line `aicontribcheck ::` report)                                            | no       |
+| skillcheck     | `tests/fixtures/safe_skill`               | 0        | 100 bytes (verdict line + counts + `findings: (none)`)                                   | no       |
+| agentmdlint    | `examples/healthy_AGENTS.md`              | 0        | 115 bytes (5-line report: tool/version, root, files, verdict, `no findings`)             | no       |
+| oraclecheck    | `examples/healthy_test.py`                | 0        | 65 bytes (`verdict: healthy (files_scanned=..., findings=..., exit=0)`)                  | no       |
+| elevatescan    | `examples/healthy_notes.md`               | 0        | 110 bytes (3-line summary: `verdict`, counts, visible/hidden)                            | no       |
+| delegcheck     | `examples/healthy_delegation.json`        | 0        | 110 bytes (3-line summary matching the elevatescan shape)                                | no       |
+| mcpservercheck | `examples/healthy_mcp.json`               | 0        | 110 bytes (3-line summary matching the elevatescan shape)                                | no       |
+| nbshape        | `examples/healthy_notebook.ipynb`         | 0        | 0 bytes                                                                                  | yes      |
+| sarifcheck     | `examples/healthy_results.sarif`          | 0        | 0 bytes                                                                                  | yes      |
+
+Five tools uphold the "empty stdout on silent clean run" discipline today:
+`jsonlcheck`, `envcheck`, `jwtcheck`, `nbshape`, `sarifcheck`. Nine emit a
+clean-run summary line (or a multi-line report) to stdout: `reqcheck`,
+`licensechain`, `aicontribcheck`, `skillcheck`, `agentmdlint`, `oraclecheck`,
+`elevatescan`, `delegcheck`, `mcpservercheck`. A CI job that pipes the tool's
+stdout into `jq` cannot yet rely on the discipline uniformly - the nine listed
+tools will emit human-readable summary text on stdout that `jq` will reject
+unless the caller also passes `--json`. Convergence to route clean-run
+summaries to stderr is an open item on the maintenance backlog; when it lands
+it will be a minor-version bump per tool, not silent drift.
 
 ## `--version`
 
