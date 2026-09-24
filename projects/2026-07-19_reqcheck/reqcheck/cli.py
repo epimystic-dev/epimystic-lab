@@ -29,9 +29,16 @@ def _severity_of(findings: Iterable[Finding]) -> int:
     return worst
 
 
+CLEAN_TEXT_SUMMARY = "no findings\n"
+
+
 def _format_text(findings: Sequence[Finding]) -> str:
+    # The clean-run "no findings" summary is emitted by the caller to
+    # stderr per docs/CONVENTIONS.md Stdout / stderr discipline; keeping
+    # it out of this formatter is what lets a silent rc=0 text-mode run
+    # produce a 0-byte stdout that `jq` / `test -s` consumers can rely on.
     if not findings:
-        return "no findings\n"
+        return ""
     lines = []
     for f in findings:
         lines.append(
@@ -67,14 +74,18 @@ def _apply_strict(findings: List[Finding]) -> List[Finding]:
 
 
 def _read_stdin_findings(fmt: str, include_info: bool, strict: bool,
-                        stdout: TextIO) -> int:
+                        stdout: TextIO, stderr: TextIO) -> int:
     text = sys.stdin.read()
     pf = parse_text(text, path="<stdin>")
     findings = audit_parsed(pf, include_info=include_info)
     if strict:
         findings = _apply_strict(findings)
-    out = _format_json(findings) if fmt == "json" else _format_text(findings)
-    stdout.write(out)
+    if fmt == "json":
+        stdout.write(_format_json(findings))
+    elif findings:
+        stdout.write(_format_text(findings))
+    else:
+        stderr.write(CLEAN_TEXT_SUMMARY)
     return _severity_of(findings)
 
 
@@ -134,7 +145,7 @@ def main(argv: Sequence[str] | None = None,
     for path in args.paths:
         if path == "-":
             code = _read_stdin_findings(
-                args.format, args.include_info, args.strict, stdout
+                args.format, args.include_info, args.strict, stdout, stderr
             )
             exit_code = max(exit_code, code)
             continue
@@ -172,8 +183,10 @@ def main(argv: Sequence[str] | None = None,
 
     if args.format == "json":
         stdout.write(_format_json(all_findings))
-    else:
+    elif all_findings:
         stdout.write(_format_text(all_findings))
+    else:
+        stderr.write(CLEAN_TEXT_SUMMARY)
 
     exit_code = max(exit_code, _severity_of(all_findings))
     return exit_code

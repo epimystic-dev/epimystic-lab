@@ -9,7 +9,7 @@ from .parser import parse_text
 from .rules import audit_parsed, audit_file, RULES
 from .typosquat import damerau_levenshtein, typosquat_candidate
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "Finding",

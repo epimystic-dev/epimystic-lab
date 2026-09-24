@@ -38,12 +38,16 @@ class CliOnFixtureTests(unittest.TestCase):
         return path
 
     def test_ok_fixture_exits_clean(self):
+        # Text-mode clean run: no findings on stdout (stdout stays empty so
+        # `jq` / `test -s` CI wrappers do not choke), summary on stderr per
+        # docs/CONVENTIONS.md Stdout / stderr discipline.
         path = self._write(OK_REQS)
         out = io.StringIO()
         err = io.StringIO()
         code = main([path], stdout=out, stderr=err)
         self.assertEqual(code, EXIT_CLEAN)
-        self.assertIn("no findings", out.getvalue())
+        self.assertEqual(out.getvalue(), "")
+        self.assertIn("no findings", err.getvalue())
 
     def test_bad_fixture_exits_error(self):
         path = self._write(BAD_REQS)
