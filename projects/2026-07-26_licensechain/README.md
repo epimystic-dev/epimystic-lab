@@ -177,11 +177,17 @@ Every rule fires deterministically; the report is sorted by
 
 ```
 $ licensechain examples/ok_chain.json
-# licensechain report for examples/ok_chain.json
-no findings.
+no findings                      # written to stderr
 $ echo $?
 0
+$ licensechain examples/ok_chain.json 2>/dev/null | wc -c
+0                                # stdout is silent on clean runs
 ```
+
+Per the lab's stdout/stderr discipline, a clean text-mode run emits zero
+bytes on stdout and the `no findings` summary on stderr, so `jq` or
+`test -s` gates that pipe stdout do not trip on diagnostic prose. Use
+`--json` for a stdout payload consumers can parse.
 
 **Bad chain** (dropped obligations):
 

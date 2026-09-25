@@ -1,6 +1,6 @@
 """licensechain -- offline license-chain hygiene linter for AI supply chains."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .spdx_data import LICENSES, is_known_id, get_license
 from .expr import parse_expr, ParseError, Expr, LicenseId, With, And, Or

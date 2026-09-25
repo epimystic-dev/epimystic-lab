@@ -54,15 +54,20 @@ def _run_cli(argv, stdin_text=""):
 class ExitCodeTests(unittest.TestCase):
 
     def test_clean_manifest_exits_zero(self):
+        # A clean text-mode run must exit 0 and, per docs/CONVENTIONS.md
+        # Stdout / stderr discipline, must produce zero bytes on stdout.
+        # The "no findings" summary is diagnostic prose and is routed to
+        # stderr so `jq` / `test -s` consumers see an empty stdout.
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".json", delete=False, encoding="utf-8"
         ) as f:
             json.dump(CLEAN, f)
             path = f.name
         try:
-            code, out, _err = _run_cli([path])
+            code, out, err = _run_cli([path])
             self.assertEqual(code, 0)
-            self.assertIn("no findings", out)
+            self.assertEqual(out, "")
+            self.assertIn("no findings", err)
         finally:
             os.remove(path)
 
@@ -137,9 +142,10 @@ class FormatTests(unittest.TestCase):
 class InputModeTests(unittest.TestCase):
 
     def test_stdin_input(self):
-        code, out, _err = _run_cli(["-"], stdin_text=json.dumps(CLEAN))
+        code, out, err = _run_cli(["-"], stdin_text=json.dumps(CLEAN))
         self.assertEqual(code, 0)
-        self.assertIn("no findings", out)
+        self.assertEqual(out, "")
+        self.assertIn("no findings", err)
 
     def test_stdin_is_default_when_no_arg(self):
         code, _out, _err = _run_cli([], stdin_text=json.dumps(CLEAN))

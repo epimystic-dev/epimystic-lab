@@ -3,7 +3,7 @@ import os
 import sys
 import unittest
 import io
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 
 from licensechain.cli import main
 
@@ -12,23 +12,28 @@ EXAMPLES = os.path.join(os.path.dirname(os.path.dirname(__file__)), "examples")
 
 
 def _run(argv):
-    buf = io.StringIO()
-    with redirect_stdout(buf):
+    out_buf = io.StringIO()
+    err_buf = io.StringIO()
+    with redirect_stdout(out_buf), redirect_stderr(err_buf):
         code = main(argv)
-    return code, buf.getvalue()
+    return code, out_buf.getvalue(), err_buf.getvalue()
 
 
 class E2ESmokeTests(unittest.TestCase):
 
     def test_ok_chain_is_clean(self):
+        # The clean-run "no findings" summary is routed to stderr per
+        # docs/CONVENTIONS.md Stdout / stderr discipline; stdout must be
+        # empty so `jq` / `test -s` gates on the clean case behave.
         path = os.path.join(EXAMPLES, "ok_chain.json")
-        code, out = _run([path])
+        code, out, err = _run([path])
         self.assertEqual(code, 0, out)
-        self.assertIn("no findings", out)
+        self.assertEqual(out, "")
+        self.assertIn("no findings", err)
 
     def test_bad_chain_reports_multiple_rules(self):
         path = os.path.join(EXAMPLES, "bad_chain.json")
-        code, out = _run([path])
+        code, out, _err = _run([path])
         # bad_chain has several errors: LIC-004 (GPL->Apache), LIC-006
         # (CC-BY-SA->Apache), LIC-009 (NOASSERTION), LIC-011 (NC->commercial)
         self.assertEqual(code, 2, out)
@@ -37,7 +42,7 @@ class E2ESmokeTests(unittest.TestCase):
 
     def test_mixed_chain_is_clean_or_warn_only(self):
         path = os.path.join(EXAMPLES, "mixed_chain.json")
-        code, out = _run([path])
+        code, out, _err = _run([path])
         # public-data(CC0) + reference-corpus(CC-BY-4.0) -> Apache-2.0 model
         # -> MIT OR Apache-2.0 app: this composition is entirely legal;
         # notices are preserved on the app but not on reference-corpus so

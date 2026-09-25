@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "licensechain"
-version = "0.1.0"
+version = "0.2.0"
 description = "Offline license-chain hygiene linter for AI supply chains: SPDX-based checks for missing licenses, compatibility violations, dropped copyleft obligations, and share-alike breakage across dataset -> model -> application manifests."
 readme = "README.md"
 requires-python = ">=3.10"

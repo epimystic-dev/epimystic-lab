@@ -11,6 +11,16 @@ from .rules import check_chain, Severity
 from .report import format_text, format_json, compute_exit_code
 
 
+# docs/CONVENTIONS.md Stdout / stderr discipline: a silent rc=0 text-mode
+# run must produce zero bytes on stdout, so downstream `jq` / `test -s`
+# / `| head` consumers can rely on empty stdout meaning "nothing to look
+# at". The "no findings" summary is diagnostic prose and belongs on
+# stderr. `format_text()` is unchanged and remains the public formatter
+# API; the routing decision lives in the CLI so a caller that imports
+# `format_text` directly still gets a self-contained report string.
+CLEAN_TEXT_SUMMARY = "no findings\n"
+
+
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="licensechain",
@@ -93,8 +103,10 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if args.json:
         sys.stdout.write(format_json(findings, source_label=label))
-    else:
+    elif findings:
         sys.stdout.write(format_text(findings, source_label=label))
+    else:
+        sys.stderr.write(CLEAN_TEXT_SUMMARY)
 
     return compute_exit_code(findings, strict=args.strict)
 
