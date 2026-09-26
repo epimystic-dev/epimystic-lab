@@ -74,6 +74,30 @@ class SharedContractInvariants(unittest.TestCase):
         r = _run(path)
         self.assertEqual(r.returncode, 0, r.stderr)
 
+    def test_clean_text_run_writes_nothing_to_stdout(self):
+        # docs/CONVENTIONS.md Stdout / stderr discipline: a silent
+        # rc=0 text-mode run must produce zero bytes on stdout, so
+        # downstream `jq` / `test -s` / `| head` consumers can rely
+        # on empty stdout meaning "nothing to look at". The verdict
+        # rollup report on the rc=0 (ALLOWED) path is diagnostic
+        # prose and belongs on stderr. Regression-locks the
+        # 2026-09-26 move of the rc=0 text-mode report from stdout
+        # to stderr; a future revert of the discipline would
+        # surface here first.
+        path = os.path.join(FIXTURES_DIR, "allow_repo")
+        r = _run(path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(
+            r.stdout,
+            "",
+            "clean text-mode run leaked to stdout: " + repr(r.stdout),
+        )
+        # The verdict header must still be produced somewhere so an
+        # operator reading the terminal knows the tool ran; stderr is
+        # the target channel on the rc=0 path.
+        self.assertIn("verdict", r.stderr)
+        self.assertIn("allowed", r.stderr)
+
     def test_known_dirty_input_returns_nonzero(self):
         # Invariant 3: a run with findings must exit non-zero so the same
         # CI gate above actually catches something. We additionally require

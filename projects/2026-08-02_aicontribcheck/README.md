@@ -141,6 +141,27 @@ Each finding:
 
 ## Examples
 
+**Clean repo** (explicit-allow verdict):
+
+```
+$ aicontribcheck tests/fixtures/allow_repo
+aicontribcheck :: .../tests/fixtures/allow_repo    # written to stderr
+  verdict         : allowed
+  files scanned   : 1
+  ...
+$ echo $?
+0
+$ aicontribcheck tests/fixtures/allow_repo 2>/dev/null | wc -c
+0                                                  # stdout is silent on rc=0
+```
+
+Per the lab's stdout/stderr discipline, a rc=0 text-mode run emits zero
+bytes on stdout and routes the verdict rollup to stderr, so `jq` or
+`test -s` gates that pipe stdout do not trip on diagnostic prose. Use
+`--json` for a stdout payload consumers can parse.
+
+**Banned repo** (findings on stdout):
+
 ```bash
 $ aicontribcheck tests/fixtures/ban_repo
 aicontribcheck :: .../tests/fixtures/ban_repo

@@ -76,15 +76,23 @@ class OutputTests(_IsolatedRegistry):
         self.assertTrue(parsed["required_disclosures"])
 
     def test_text_output_default_suppresses_info(self):
-        _code, out, _err = _run([str(FIXTURES / "allow_repo")])
-        # AICONTRIB-002 is INFO severity, filtered by default.
-        self.assertNotIn("[INFO ]", out)
+        # allow_repo resolves to verdict=allowed / rc=0. Under the
+        # 2026-09-26 stdout/stderr discipline the whole rc=0 text
+        # report is routed to stderr (see docs/CONVENTIONS.md);
+        # AICONTRIB-002 is INFO severity and must still be filtered
+        # from the report regardless of stream.
+        _code, out, err = _run([str(FIXTURES / "allow_repo")])
+        self.assertEqual(out, "")
+        self.assertNotIn("[INFO ]", err)
 
     def test_text_output_include_info_shows_info(self):
-        _code, out, _err = _run(
+        # allow_repo is rc=0 so --include-info surfaces the INFO
+        # finding on stderr (the rc=0 text channel), not stdout.
+        _code, out, err = _run(
             [str(FIXTURES / "allow_repo"), "--include-info"]
         )
-        self.assertIn("[INFO ]", out)
+        self.assertEqual(out, "")
+        self.assertIn("[INFO ]", err)
 
     def test_json_names_no_tools_without_registration(self):
         # Vendor-neutral by default: no product is named unless the caller asks for it.

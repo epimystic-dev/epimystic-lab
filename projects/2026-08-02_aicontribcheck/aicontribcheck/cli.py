@@ -94,27 +94,45 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         patterns.register_tool_names(args.extra_tool_names)
 
     report = scan_repo(target)
+    code = exit_code(report, strict=args.strict)
 
     if args.json:
         print(format_json(report))
-    else:
-        text_output = format_text(report)
-        if not args.include_info:
-            # Filter INFO lines from human output for less noise.
-            filtered: List[str] = []
-            skip_next_evidence = False
-            for line in text_output.splitlines():
-                if skip_next_evidence:
-                    skip_next_evidence = False
-                    if line.startswith("          evidence:"):
-                        continue
-                if "[INFO ]" in line:
-                    skip_next_evidence = True
+        return code
+
+    text_output = format_text(report)
+    if not args.include_info:
+        # Filter INFO lines from human output for less noise.
+        filtered: List[str] = []
+        skip_next_evidence = False
+        for line in text_output.splitlines():
+            if skip_next_evidence:
+                skip_next_evidence = False
+                if line.startswith("          evidence:"):
                     continue
-                filtered.append(line)
-            text_output = "\n".join(filtered)
+            if "[INFO ]" in line:
+                skip_next_evidence = True
+                continue
+            filtered.append(line)
+        text_output = "\n".join(filtered)
+
+    # docs/CONVENTIONS.md Stdout / stderr discipline: a silent rc=0
+    # text-mode run must produce zero bytes on stdout, so downstream
+    # `jq` / `test -s` / `| head` consumers can rely on empty stdout
+    # meaning "nothing to look at". The verdict-and-counts report is
+    # diagnostic prose in the rc=0 (ALLOWED) case and belongs on
+    # stderr; on non-zero rc the same block frames actionable
+    # findings and stays on stdout. `format_text()` is unchanged and
+    # remains the public formatter API; the routing decision lives in
+    # the CLI so a caller that imports `format_text` directly still
+    # gets a self-contained report string. JSON output is unchanged:
+    # it always goes to stdout so consumers of `--json` see the same
+    # bytes regardless of verdict.
+    if code == 0:
+        print(text_output, file=sys.stderr)
+    else:
         print(text_output)
-    return exit_code(report, strict=args.strict)
+    return code
 
 
 if __name__ == "__main__":
