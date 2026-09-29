@@ -36,6 +36,7 @@ Small, offline, zero-dependency (stdlib-only) hygiene utilities. Each folder has
 | [`sarifcheck`](projects/2026-09-18_sarifcheck/) | Static linter for SARIF 2.1.0 result files (ingest ceilings, absolute host paths, unresolvable rule refs) | Security-scan output |
 | [`nbshape`](projects/2026-09-18_nbshape/) | Reproducibility and disclosure linter for notebook JSON (execution order, retained outputs, committed secrets) | Notebooks |
 | [`pjhookcheck`](projects/2026-09-20_pjhookcheck/) | Static linter for `package.json` lifecycle-hook and install-time supply-chain shapes (fetch-and-exec hooks, url deps, unpinned versions) | Install-time hooks |
+| [`approvchainlint`](projects/2026-09-27_approvchainlint/) | Static linter for agent-tool approval config files (coding-agent permissions, MCP `mcp.json`, generic agent-tool descriptors) - flags approval-laundering shapes (transitive effects beyond the approved invocation) | Agent-tool approvals |
 | [`seedline`](projects/2026-06-29_seedline/) | One `seed_all(n)` that seeds Python / NumPy / PyTorch RNGs | Reproducibility (lib) |
 
 ## How it is made (and what that means)

@@ -76,6 +76,35 @@ class SharedContractInvariants(unittest.TestCase):
         r = _run(path)
         self.assertEqual(r.returncode, 0, r.stderr)
 
+    def test_clean_text_run_writes_nothing_to_stdout(self):
+        # Invariant 4 (docs/CONVENTIONS.md Stdout / stderr discipline):
+        # a silent rc=0 text-mode run must produce zero bytes on stdout,
+        # so a `jq` / `test -s` / `| head` CI wrapper piping the tool's
+        # stdout can rely on empty stdout meaning "nothing to look at".
+        # Under skillcheck's Convention C, rc=0 requires an explicit
+        # SAFE verdict, so tests/fixtures/safe_skill is the correct
+        # known-clean input and its verdict-and-counts block must land
+        # on stderr, not stdout. --json mode is exempt from this
+        # invariant (JSON output goes to stdout regardless of rc); the
+        # JSON path is exercised by tests/test_cli.py's --json tests.
+        path = os.path.join(FIXTURES_DIR, "safe_skill")
+        r = _run(path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(
+            r.stdout,
+            "",
+            "skillcheck emitted bytes on stdout for a rc=0 text-mode "
+            "run; docs/CONVENTIONS.md Stdout / stderr discipline "
+            "requires the verdict-and-counts block to route to stderr "
+            "in this case. stdout was: " + repr(r.stdout),
+        )
+        self.assertIn(
+            "verdict: safe",
+            r.stderr,
+            "expected the verdict line on stderr for a rc=0 text-mode "
+            "run; stderr was: " + repr(r.stderr),
+        )
+
     def test_known_dirty_input_returns_nonzero(self):
         # Invariant 3: a run with findings must exit non-zero so the same
         # CI gate above actually catches something. We additionally require

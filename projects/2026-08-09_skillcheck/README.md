@@ -70,6 +70,30 @@ Surface INFO-severity findings (hidden by default -- currently only
 skillcheck --include-info /path/to/repo
 ```
 
+## Clean-run output discipline
+
+A silent rc=0 run (verdict `safe`) writes zero bytes to stdout; the
+verdict-and-counts diagnostic block is routed to stderr instead, so a
+`jq`, `test -s`, or `| head` wrapper piping skillcheck's stdout sees
+nothing when there is nothing to look at:
+
+```
+$ skillcheck /path/to/safe/repo 2>/dev/null | wc -c
+0
+$ skillcheck /path/to/safe/repo 2>&1 >/dev/null
+verdict: safe
+files_scanned=1 total_findings=0 critical=0 high=0 medium=0 info=0
+findings:
+  (none)
+```
+
+Non-zero rc runs (verdict `suspicious`, `unsafe`, or `unknown`
+including `--strict`) keep the block on stdout so consumers that grep
+for `SKILLCHECK-*` rule codes are unchanged. `--json` mode is exempt:
+the JSON payload always goes to stdout regardless of verdict. See
+`docs/CONVENTIONS.md` (Stdout / stderr discipline) in the epimystic-lab
+mono-repo for the cross-tool contract.
+
 ## Exit codes
 
 | Code | Meaning |

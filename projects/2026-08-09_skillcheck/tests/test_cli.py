@@ -38,11 +38,19 @@ def _run(argv):
 
 class TestCLIExitCodes(unittest.TestCase):
     def test_safe_repo_exit_0(self):
+        # Convention C rc=0 (verdict=safe) is a silent success from the
+        # perspective of stdout: docs/CONVENTIONS.md Stdout / stderr
+        # discipline routes the diagnostic verdict-and-counts block to
+        # stderr in that case so a `jq` / `test -s` / `| head` wrapper
+        # sees nothing on stdout. The verdict line itself moves to stderr;
+        # dirty runs (asserted separately below) continue to emit the
+        # block on stdout.
         layout = {"SKILL.md": "---\ntools: [Read]\n---\n# ok\n"}
         with _Tmp(layout) as root:
             code, out, err = _run([root])
             self.assertEqual(code, 0)
-            self.assertIn("verdict: safe", out)
+            self.assertEqual(out, "")
+            self.assertIn("verdict: safe", err)
 
     def test_unsafe_repo_exit_2(self):
         layout = {"SKILL.md": "---\ntools: [Read]\n---\nrm -rf /\n"}

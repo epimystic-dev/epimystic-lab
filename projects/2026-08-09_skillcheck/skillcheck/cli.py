@@ -58,15 +58,35 @@ def main(argv: Optional[List[str]] = None, *, stdout=None, stderr=None) -> int:
         return 2
 
     report = scan_path(path)
+    code = exit_code_for(report, strict=args.strict)
 
     if args.json:
         stdout.write(report_to_json(report, include_info=args.include_info))
         stdout.write("\n")
+        return code
+
+    # docs/CONVENTIONS.md Stdout / stderr discipline: a silent rc=0
+    # text-mode run must produce zero bytes on stdout so downstream
+    # `jq` / `test -s` / `| head` consumers can rely on empty stdout
+    # meaning "nothing to look at". Under skillcheck's Convention C
+    # verdict rollup, rc=0 iff verdict=SAFE, so the verdict-and-counts
+    # block is diagnostic prose in that case and belongs on stderr;
+    # on non-zero rc (SUSPICIOUS/UNSAFE/UNKNOWN incl. --strict) the
+    # same block frames actionable findings and stays on stdout so
+    # consumers that already scrape stdout for SKILLCHECK-* rule
+    # codes are unchanged. `report_to_text()` is unchanged and
+    # remains the public formatter API; the routing decision lives
+    # in the CLI so a caller that imports it directly still gets a
+    # self-contained report string.
+    text_output = report_to_text(report, include_info=args.include_info)
+    if code == 0:
+        stderr.write(text_output)
+        stderr.write("\n")
     else:
-        stdout.write(report_to_text(report, include_info=args.include_info))
+        stdout.write(text_output)
         stdout.write("\n")
 
-    return exit_code_for(report, strict=args.strict)
+    return code
 
 
 if __name__ == "__main__":
