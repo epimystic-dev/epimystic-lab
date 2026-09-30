@@ -62,15 +62,23 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(code, 2)
 
     def test_healthy_file_exit_zero(self):
+        # v0.2.0: on a rc=0 text-mode run the verdict-and-counts block
+        # routes to stderr per docs/CONVENTIONS.md Stdout / stderr
+        # discipline; stdout must be empty so downstream `jq` / `test -s`
+        # CI wrappers can rely on empty stdout meaning "nothing to look
+        # at". The rule-code content moved with it; on the dirty branch
+        # (see test_unhealthy_file_exit_two-adjacent tests) it stays on
+        # stdout.
         self.repo.write(
             "AGENTS.md",
             "# Purpose\n\nThis file documents how the agent operates in the project, "
             "including rationale for every rule below.\n\n## Rules\n\n"
             "You must use HTTPS because plaintext leaks tokens.\n",
         )
-        code, out, _ = run_cli([self.repo.root])
+        code, out, err = run_cli([self.repo.root])
         self.assertEqual(code, 0)
-        self.assertIn("healthy", out)
+        self.assertEqual(out, "", "stdout was: " + repr(out))
+        self.assertIn("healthy", err)
 
     def test_unhealthy_file_exit_two(self):
         self.repo.write(
@@ -93,19 +101,32 @@ class TestCLI(unittest.TestCase):
         self.assertIn("verdict", payload)
 
     def test_single_file_path(self):
+        # v0.2.0: text-mode routing depends on the run's exit code
+        # (stderr on rc=0, stdout otherwise). This test only asserts
+        # that the scanned path shows up in the human-readable report,
+        # not which stream carries it - the routing invariant is the
+        # subject of test_shared_contract.py's new invariant test.
         f = self.repo.write("MY.md", "# Doc\n\nprose\n\nYou must use HTTPS.\n")
-        code, out, _ = run_cli([f, "--include-info"])
-        self.assertIn(f, out)
+        code, out, err = run_cli([f, "--include-info"])
+        combined = out if code != 0 else err
+        self.assertIn(f, combined)
 
     def test_include_info_shows_info(self):
+        # v0.2.0: both runs return rc=0 (HEALTHY - only INFO findings),
+        # so the report body routes to stderr under the new discipline.
+        # The behaviour under test is that --include-info surfaces
+        # AGENTMD-004 in the report body; the assertion tracks the
+        # report body wherever it lands.
         self.repo.write(
             "AGENTS.md",
             "# Purpose\n\nDoc.\n\nYou must use HTTPS.\n",
         )
-        _, out_no, _ = run_cli([self.repo.root])
-        _, out_yes, _ = run_cli([self.repo.root, "--include-info"])
-        self.assertNotIn("AGENTMD-004", out_no)
-        self.assertIn("AGENTMD-004", out_yes)
+        code_no, out_no, err_no = run_cli([self.repo.root])
+        code_yes, out_yes, err_yes = run_cli([self.repo.root, "--include-info"])
+        body_no = out_no if code_no != 0 else err_no
+        body_yes = out_yes if code_yes != 0 else err_yes
+        self.assertNotIn("AGENTMD-004", body_no)
+        self.assertIn("AGENTMD-004", body_yes)
 
     def test_default_path_is_cwd(self):
         cwd = os.getcwd()
@@ -119,9 +140,13 @@ class TestCLI(unittest.TestCase):
             os.chdir(cwd)
 
     def test_custom_files_argument(self):
+        # v0.2.0: --files causes MY_INSTRUCTIONS.md to be scanned; the
+        # assertion tracks the report body wherever the exit-code-based
+        # routing sends it.
         self.repo.write("MY_INSTRUCTIONS.md", "# Purpose\n\nGuide.\n\nYou must use HTTPS.\n")
-        code, out, _ = run_cli([self.repo.root, "--files", "MY_INSTRUCTIONS.md", "--include-info"])
-        self.assertIn("MY_INSTRUCTIONS.md", out)
+        code, out, err = run_cli([self.repo.root, "--files", "MY_INSTRUCTIONS.md", "--include-info"])
+        combined = out if code != 0 else err
+        self.assertIn("MY_INSTRUCTIONS.md", combined)
 
     def test_invalid_today_exit_two(self):
         self.repo.write("AGENTS.md", "# Purpose\n\nGuide.\n")

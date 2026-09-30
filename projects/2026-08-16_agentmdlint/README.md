@@ -67,6 +67,31 @@ Show info-severity findings in text output (hidden by default):
 agentmdlint --include-info
 ```
 
+## Clean-run output discipline
+
+A silent rc=0 run (verdict `healthy`) writes zero bytes to stdout; the
+verdict-and-counts diagnostic block is routed to stderr instead, so a
+`jq`, `test -s`, or `| head` wrapper piping agentmdlint's stdout sees
+nothing when there is nothing to look at:
+
+```
+$ agentmdlint examples/healthy_AGENTS.md 2>/dev/null | wc -c
+0
+$ agentmdlint examples/healthy_AGENTS.md 2>&1 >/dev/null
+agentmdlint 0.2.0
+root: examples/healthy_AGENTS.md
+files: 1 scanned / 1 seen
+verdict: healthy (exit 0)
+no findings
+```
+
+Non-zero rc runs (verdict `needs-attention`, `unhealthy`, or `unknown`
+including `--strict`) keep the block on stdout so consumers that grep
+for `AGENTMD-*` rule codes are unchanged. `--json` mode is exempt: the
+JSON payload always goes to stdout regardless of verdict. See
+`docs/CONVENTIONS.md` (Stdout / stderr discipline) in the epimystic-lab
+mono-repo for the cross-tool contract.
+
 ## Exit codes
 
 | Verdict           | Default exit | `--strict` exit |

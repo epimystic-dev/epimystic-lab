@@ -130,13 +130,31 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     report = scan_path(path, cfg)
 
-    if args.json:
-        sys.stdout.write(format_json(report, cfg, strict=args.strict, include_info=True) + "\n")
-    else:
-        sys.stdout.write(format_text(report, cfg, strict=args.strict, include_info=args.include_info))
-
     from .verdict import compute_verdict
     _, exit_code = compute_verdict(report, cfg, strict=args.strict)
+
+    if args.json:
+        sys.stdout.write(format_json(report, cfg, strict=args.strict, include_info=True) + "\n")
+        return exit_code
+
+    # docs/CONVENTIONS.md Stdout / stderr discipline: a silent rc=0
+    # text-mode run must produce zero bytes on stdout so downstream
+    # jq / test -s / | head CI wrappers piping the tool's stdout can
+    # rely on empty stdout meaning "nothing to look at". agentmdlint
+    # follows Convention B (severity-tiered), so rc=0 means no
+    # medium/high/critical findings and no unknown verdict; the
+    # verdict-and-counts block is diagnostic prose in that case and
+    # routes to stderr. On non-zero rc the same block frames actionable
+    # findings and stays on stdout so consumers that already scrape
+    # stdout for AGENTMD-* rule codes are unchanged. format_text() is
+    # unchanged and remains the public formatter API; the routing
+    # decision lives in the CLI so a caller that imports it directly
+    # still gets a self-contained report string.
+    text_output = format_text(report, cfg, strict=args.strict, include_info=args.include_info)
+    if exit_code == 0:
+        sys.stderr.write(text_output)
+    else:
+        sys.stdout.write(text_output)
     return exit_code
 
 
