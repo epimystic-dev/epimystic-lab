@@ -1,0 +1,72 @@
+{
+  "$comment": "Defensibly-scoped agent-tool config that fires no rule.",
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git diff)",
+      "Read(src/**)"
+    ],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "confirm"
+  },
+  "mcpServers": {
+    "docs_srv": {
+      "command": "/usr/local/bin/docs-mcp",
+      "args": ["--serve"],
+      "env": {},
+      "tools": [
+        {
+          "name": "read_docs",
+          "capabilities": ["filesystem_read"],
+          "read_only": true,
+          "effects": ["filesystem_read"],
+          "audit_log": true
+        }
+      ]
+    }
+  },
+  "tools": [
+    {
+      "name": "coordinator_tool",
+      "command": "/usr/local/bin/coordinator",
+      "delegates_to": ["planner", "reviewer"],
+      "capabilities": ["subprocess"],
+      "effects": ["subprocess"],
+      "require_child_approval": true,
+      "audit_log": true,
+      "approval": {"required": true}
+    },
+    {
+      "name": "read_only_reader",
+      "read_only": true,
+      "capabilities": ["filesystem_read"],
+      "effects": ["filesystem_read"],
+      "approval": {"required": true}
+    },
+    {
+      "name": "scoped_fetcher",
+      "capabilities": ["network"],
+      "effects": ["network"],
+      "allowlist_hosts": ["docs.example.com"],
+      "approval": {"required": true}
+    }
+  ],
+  "approvals": [
+    {
+      "tool": "coordinator_tool",
+      "scope": "coordinator_tool(plan)",
+      "ttl_seconds": 300,
+      "capabilities": ["subprocess"],
+      "require_approval": true
+    },
+    {
+      "tool": "scoped_fetcher",
+      "scope": "scoped_fetcher(docs.example.com/*)",
+      "ttl_seconds": 600,
+      "capabilities": ["network"],
+      "require_approval": true
+    }
+  ],
+  "startup_approvals": []
+}

@@ -1,0 +1,12 @@
+{
+  "name": "approvchainlint",
+  "slug": "2026-09-27_approvchainlint",
+  "one_liner": "Static linter for agent-tool approval configuration files - flags twelve shape defects that enable approval laundering (transitive effects beyond the approved invocation) across coding-agent permission blocks, MCP tool descriptors, and generic agent-tool configs.",
+  "problem": "An approval record binds a human decision to a command or tool call. arXiv 2609.28586 (Zhang et al., 'Agent Approval Laundering: Transitive Effects Beyond the Approved Invocation', submitted 2026-09-23) formalises closure-bound approval over six effect classes (subprocess, network, filesystem-write, eval, persistent-state, external-hook) and proves an information-limit result: identical policy-visible fields can require different effect-specific decisions, so record-only policies cannot guarantee closure. Reinforcing signal from the same week: HN 49852101 ('AI: Who Still Uses Permissions?') documents user frustration driving sticky and auto-approve patterns, and HN 49830471 (a 'Show HN' for a coding-agent tooling gateway that manages approvals on the user's behalf) describes exactly the laundering pattern the paper names. approvchainlint reads a coding-agent settings.json permissions block, an MCP mcp.json mcpServers block, or a generic tools/approvals list and reports twelve shape defects across approval scope width, TTL and stickiness, delegation and network binding, mislabeled read-only tools, duplicate approvals with divergent policy, install-hook post-approval capabilities, and startup pre-approvals of HIGH-effect tools. This is an independent implementation, not affiliated with or endorsed by the authors of the paper.",
+  "language": "python",
+  "test_cmd": "python -m unittest discover -s tests",
+  "build_cmd": "python -m pip install -e .",
+  "deps": [],
+  "license": "MIT",
+  "clean_room": "Rules are derived from the public abstract of arXiv 2609.28586 and from standard tool-config schema documentation (the coding-agent permissions block convention, the Model Context Protocol mcp.json shape, generic agent-tool descriptor conventions). No reference implementation of an approval-chain linter was read, vendored, or mirrored. The paper's rung-1 pattern-recognition surface is intentionally exposed by these rules; the paper's rung-2 and rung-3 arguments (interventional closure, structural-causal-model reasoning) are out of scope for a shape-only linter."
+}
