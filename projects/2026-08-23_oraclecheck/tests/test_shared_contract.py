@@ -64,6 +64,43 @@ class SharedContractInvariants(unittest.TestCase):
         r = _run(path)
         self.assertEqual(r.returncode, 0, r.stderr)
 
+    def test_clean_text_run_writes_nothing_to_stdout(self):
+        # Invariant 4 (docs/CONVENTIONS.md Stdout / stderr discipline):
+        # a silent rc=0 text-mode run must produce zero bytes on stdout,
+        # so a `jq` / `test -s` / `| head` CI wrapper piping the tool's
+        # stdout can rely on empty stdout meaning "nothing to look at".
+        # oraclecheck follows Convention B (severity-tiered), so rc=0
+        # means verdict healthy with no HIGH/MEDIUM finding. The healthy
+        # example asserts against hand-written literals only, so no
+        # oraclecheck rule can fire regardless of the SUT-inference hint
+        # or system clock - the clean-run shape is stable without pinning.
+        # The verdict-and-counts summary line must land on stderr, not
+        # stdout. --json mode is exempt from this invariant (JSON output
+        # goes to stdout regardless of rc); the JSON path is exercised
+        # by tests/test_cli.py's --json tests.
+        path = os.path.join(EXAMPLES_DIR, "healthy_test.py")
+        self.assertTrue(
+            os.path.isfile(path),
+            "examples/healthy_test.py is a documented artifact; "
+            "missing here means the example fixture regressed.",
+        )
+        r = _run(path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(
+            r.stdout,
+            "",
+            "oraclecheck emitted bytes on stdout for a rc=0 text-mode "
+            "run; docs/CONVENTIONS.md Stdout / stderr discipline "
+            "requires the verdict-and-counts summary to route to stderr "
+            "in this case. stdout was: " + repr(r.stdout),
+        )
+        self.assertIn(
+            "verdict: healthy",
+            r.stderr,
+            "expected the verdict line on stderr for a rc=0 text-mode "
+            "run; stderr was: " + repr(r.stderr),
+        )
+
     def test_known_dirty_input_returns_nonzero(self):
         # Invariant 3: a run with findings must exit non-zero so the same
         # CI gate above actually catches something. We additionally require

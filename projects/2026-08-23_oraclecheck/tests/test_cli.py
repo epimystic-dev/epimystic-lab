@@ -53,9 +53,14 @@ class TestCLI(_TempTree):
         self._write("test_bar.py", "class T:\n def t(self):\n  self.assertEqual(compute(1), 2)\n")
         os.remove(os.path.join(self.tmp, "test_foo.py"))
         code, out, err = self._run([self.tmp])
-        # test_bar.py is clean (no findings) -> healthy exit 0
+        # test_bar.py is clean (no findings) -> healthy exit 0.
+        # v0.2.0: on rc=0 text-mode runs the verdict-and-counts summary
+        # routes to stderr (docs/CONVENTIONS.md Stdout / stderr discipline),
+        # so the verdict word now lands on err rather than out. stdout
+        # must be empty for the clean-run CI-wrapper contract.
         self.assertEqual(code, 0, msg=f"out={out!r} err={err!r}")
-        self.assertIn("healthy", out)
+        self.assertEqual(out, "", msg=f"stdout must be empty on rc=0, got: {out!r}")
+        self.assertIn("healthy", err)
 
     def test_unhealthy_dir_exit_2(self):
         self._write("test_foo.py",
@@ -83,10 +88,16 @@ class TestCLI(_TempTree):
         self.assertEqual(parsed["exit_code"], 2)
 
     def test_include_info_surfaces_info_findings_in_text(self):
+        # v0.2.0: an INFO-only run with --include-info (but without --strict)
+        # resolves to verdict=healthy and rc=0, so the report body routes to
+        # stderr under the Stdout / stderr discipline. The behaviour under
+        # test here is that --include-info surfaces ORACLE-010 in the report
+        # body; the assertion tracks the report body wherever it lands.
         self._write("test_foo.py",
                     "class T:\n def t(self):\n  self.assertTrue(True)\n")
-        code, out, _ = self._run([self.tmp, "--include-info"])
-        self.assertIn("ORACLE-010", out)
+        code, out, err = self._run([self.tmp, "--include-info"])
+        body = out if code != 0 else err
+        self.assertIn("ORACLE-010", body)
 
     def test_default_path_is_cwd(self):
         # Use --sut to disable inference influence

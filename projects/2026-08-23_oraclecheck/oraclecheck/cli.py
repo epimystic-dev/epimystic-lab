@@ -71,12 +71,31 @@ def main(argv: Optional[List[str]] = None) -> int:
     results = scan_path(args.path, config)
     report = build_report(results, strict=args.strict, include_info=args.include_info)
 
+    exit_code = int(report["exit_code"])
+
     if args.json:
         sys.stdout.write(render_json(report) + "\n")
-    else:
-        sys.stdout.write(render_text(report))
+        return exit_code
 
-    return int(report["exit_code"])
+    # docs/CONVENTIONS.md Stdout / stderr discipline: a silent rc=0
+    # text-mode run must produce zero bytes on stdout so downstream
+    # jq / test -s / | head CI wrappers piping the tool's stdout can
+    # rely on empty stdout meaning "nothing to look at". oraclecheck
+    # follows Convention B (severity-tiered), so rc=0 means verdict
+    # healthy with no HIGH/MEDIUM finding (and no --strict escalation);
+    # the one-line verdict-and-counts summary is diagnostic prose in
+    # that case and routes to stderr. On non-zero rc the same line
+    # frames actionable findings and stays on stdout so consumers that
+    # already scrape stdout for ORACLE-* rule codes are unchanged.
+    # render_text() is unchanged and remains the public formatter API;
+    # the routing decision lives in the CLI so a caller that imports it
+    # directly still gets a self-contained report string.
+    text_output = render_text(report)
+    if exit_code == 0:
+        sys.stderr.write(text_output)
+    else:
+        sys.stdout.write(text_output)
+    return exit_code
 
 
 if __name__ == "__main__":

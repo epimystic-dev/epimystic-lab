@@ -125,6 +125,27 @@ produces (example):
 JSON output uses `sort_keys=True` and fixed indent, so successive runs on
 the same input are byte-identical.
 
+## Clean-run output discipline
+
+A silent rc=0 run (verdict `healthy`) writes zero bytes to stdout; the
+one-line verdict-and-counts summary is routed to stderr instead, so a
+`jq`, `test -s`, or `| head` wrapper piping oraclecheck's stdout sees
+nothing when there is nothing to look at:
+
+```
+$ oraclecheck examples/healthy_test.py 2>/dev/null | wc -c
+0
+$ oraclecheck examples/healthy_test.py 2>&1 >/dev/null
+verdict: healthy (files_scanned=1, findings=0 visible=0, exit=0)
+```
+
+Non-zero rc runs (verdict `needs-attention`, `unhealthy`, or `unknown`
+including `--strict`) keep the summary on stdout so consumers that grep
+for `ORACLE-*` rule codes are unchanged. `--json` mode is exempt: the
+JSON payload always goes to stdout regardless of verdict. See
+`docs/CONVENTIONS.md` (Stdout / stderr discipline) in the epimystic-lab
+mono-repo for the cross-tool contract.
+
 ## Honest scope and limits
 
 - **Pattern-based, not proof.** `oraclecheck` inspects source shape via
