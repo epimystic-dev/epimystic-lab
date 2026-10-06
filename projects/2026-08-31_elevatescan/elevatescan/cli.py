@@ -85,8 +85,27 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     result = scan_path(path, config)
     verdict = compute_verdict(result, config)
+    rc = exit_code(verdict, config)
     if ns.json:
         sys.stdout.write(render_json(result, verdict, config))
     else:
-        sys.stdout.write(render_text(result, verdict, config))
-    return exit_code(verdict, config)
+        # docs/CONVENTIONS.md Stdout / stderr discipline: a silent rc=0
+        # text-mode run must produce zero bytes on stdout so downstream
+        # jq / test -s / | head CI wrappers piping the tool's stdout can
+        # rely on empty stdout meaning "nothing to look at". elevatescan
+        # follows Convention B (severity-tiered), so rc=0 means verdict
+        # healthy with no HIGH / MEDIUM finding (and no --strict escalation);
+        # the three-line verdict / counts / visibility summary is
+        # diagnostic prose in that case and routes to stderr. On non-zero
+        # rc the same block frames actionable findings and stays on stdout
+        # so consumers that already scrape stdout for ESC-* rule codes are
+        # unchanged. render_text() is unchanged and remains the public
+        # formatter API; the routing decision lives in the CLI so a caller
+        # that imports it directly still gets a self-contained report
+        # string.
+        text_output = render_text(result, verdict, config)
+        if rc == 0:
+            sys.stderr.write(text_output)
+        else:
+            sys.stdout.write(text_output)
+    return rc

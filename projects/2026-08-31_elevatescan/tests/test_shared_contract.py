@@ -57,6 +57,15 @@ class SharedContractInvariants(unittest.TestCase):
         # elevatescan rule can fire against it regardless of the default
         # or --strict configuration - the assertion stays stable without
         # any per-run pinning.
+        #
+        # Additionally lock docs/CONVENTIONS.md Stdout / stderr discipline:
+        # a rc=0 text-mode run must produce zero bytes on stdout so a
+        # `jq` / `test -s` / `| head` CI wrapper piping the tool's stdout
+        # can rely on empty stdout meaning "nothing to look at". The
+        # three-line verdict / counts / visibility summary must land on
+        # stderr, not stdout. --json mode is exempt from this invariant
+        # (JSON output goes to stdout regardless of rc); the JSON path is
+        # exercised by tests/test_cli.py's --json tests.
         path = os.path.join(EXAMPLES_DIR, "healthy_notes.md")
         self.assertTrue(
             os.path.isfile(path),
@@ -66,6 +75,20 @@ class SharedContractInvariants(unittest.TestCase):
         )
         r = _run(path)
         self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(
+            r.stdout,
+            "",
+            "elevatescan emitted bytes on stdout for a rc=0 text-mode "
+            "run; docs/CONVENTIONS.md Stdout / stderr discipline "
+            "requires the verdict summary to route to stderr in this "
+            "case. stdout was: " + repr(r.stdout),
+        )
+        self.assertIn(
+            "verdict: healthy",
+            r.stderr,
+            "expected the verdict line on stderr for a rc=0 text-mode "
+            "run; stderr was: " + repr(r.stderr),
+        )
 
     def test_known_dirty_input_returns_nonzero(self):
         # Invariant 3: a run with findings must exit non-zero so the same
