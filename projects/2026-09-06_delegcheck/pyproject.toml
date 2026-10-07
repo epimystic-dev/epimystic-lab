@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "delegcheck"
-version = "0.1.0"
+version = "0.2.0"
 description = "Offline static linter for agent-delegation configuration files (MCP-style descriptors, agent manifests, tool registries)."
 readme = "README.md"
 requires-python = ">=3.9"

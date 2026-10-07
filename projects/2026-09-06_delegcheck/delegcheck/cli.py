@@ -85,10 +85,30 @@ def main(argv: Optional[Sequence[str]] = None,
         max_bytes=args.max_bytes,
     )
 
+    verdict = compute_verdict(result, strict=args.strict)
+    rc = exit_code_for(verdict, strict=args.strict)
+
     if args.json:
         stdout.write(format_json(result, strict=args.strict, include_info=args.include_info))
     else:
-        stdout.write(format_text(result, strict=args.strict, include_info=args.include_info))
+        # docs/CONVENTIONS.md Stdout / stderr discipline: a silent rc=0
+        # text-mode run must produce zero bytes on stdout so downstream
+        # jq / test -s / | head CI wrappers piping the tool's stdout can
+        # rely on empty stdout meaning "nothing to look at". delegcheck
+        # follows Convention B (severity-tiered), so rc=0 means verdict
+        # healthy with no HIGH / MEDIUM finding (and no --strict
+        # escalation); the three-line verdict / counts / visibility
+        # summary is diagnostic prose in that case and routes to stderr.
+        # On non-zero rc the same block frames actionable findings and
+        # stays on stdout so consumers that already scrape stdout for
+        # DEL-* rule codes are unchanged. format_text() is deliberately
+        # untouched so a caller that imports it as a library still gets
+        # the same self-contained report string; the routing decision
+        # lives in the CLI.
+        text_output = format_text(result, strict=args.strict, include_info=args.include_info)
+        if rc == 0:
+            stderr.write(text_output)
+        else:
+            stdout.write(text_output)
 
-    verdict = compute_verdict(result, strict=args.strict)
-    return exit_code_for(verdict, strict=args.strict)
+    return rc

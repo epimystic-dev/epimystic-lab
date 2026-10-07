@@ -64,7 +64,13 @@ class TestCLIDirScans(unittest.TestCase):
             _write(d, "a.json", json.dumps(self._healthy_obj(), indent=2))
             code, out, err = _run([d])
             self.assertEqual(code, 0, msg=out + "\n" + err)
-            self.assertIn("verdict: healthy", out)
+            # v0.2.0: a rc=0 text-mode run routes the verdict / counts /
+            # visibility summary to stderr so a `jq` / `test -s` CI
+            # wrapper piping delegcheck's stdout can rely on empty
+            # stdout meaning "nothing to look at". The JSON path keeps
+            # writing to stdout.
+            self.assertEqual(out, "")
+            self.assertIn("verdict: healthy", err)
 
     def test_unhealthy_dir_exit_2(self):
         with tempfile.TemporaryDirectory(prefix="dc-") as d:
@@ -100,11 +106,18 @@ class TestCLIDirScans(unittest.TestCase):
             long_token = "".join(parts)
             obj = {"credentials": [{"name": "t", "type": "bearer", "value": long_token, "scope": "read:x", "expires_at": "2026-10-01"}]}
             _write(d, "a.json", json.dumps(obj, indent=2))
-            code_default, out_default, _ = _run([d])
-            code_incl, out_incl, _ = _run([d, "--include-info"])
-            self.assertIn("info=1", out_default)
-            self.assertNotIn("DEL-010", out_default)
-            self.assertIn("DEL-010", out_incl)
+            code_default, out_default, err_default = _run([d])
+            code_incl, out_incl, err_incl = _run([d, "--include-info"])
+            # v0.2.0: both runs are rc=0 (INFO-only under default and
+            # under --include-info) so the three-line summary routes to
+            # stderr; stdout stays empty in both cases.
+            self.assertEqual(code_default, 0)
+            self.assertEqual(code_incl, 0)
+            self.assertEqual(out_default, "")
+            self.assertEqual(out_incl, "")
+            self.assertIn("info=1", err_default)
+            self.assertNotIn("DEL-010", err_default)
+            self.assertIn("DEL-010", err_incl)
 
     def test_disable_flips_verdict(self):
         with tempfile.TemporaryDirectory(prefix="dc-") as d:
