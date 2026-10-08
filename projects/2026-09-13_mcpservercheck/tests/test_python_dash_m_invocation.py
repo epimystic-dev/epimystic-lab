@@ -41,7 +41,10 @@ class DashMInvocationTests(unittest.TestCase):
             cwd=ROOT, env=_env(), capture_output=True, text=True,
         )
         self.assertEqual(r.returncode, 0)
-        self.assertIn("verdict: healthy", r.stdout)
+        # rc=0 text-mode runs route the verdict summary to stderr per
+        # docs/CONVENTIONS.md Stdout / stderr discipline.
+        self.assertEqual(r.stdout, "")
+        self.assertIn("verdict: healthy", r.stderr)
 
 
 if __name__ == "__main__":

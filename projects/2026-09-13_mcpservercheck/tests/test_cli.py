@@ -45,7 +45,11 @@ class CliPathTests(unittest.TestCase):
     def test_healthy_dir_exit_zero(self):
         code, out, err = _run(os.path.join(FIXTURES, "healthy"))
         self.assertEqual(code, 0)
-        self.assertIn("verdict: healthy", out)
+        # docs/CONVENTIONS.md Stdout / stderr discipline: a rc=0
+        # text-mode run writes the verdict summary to stderr; stdout
+        # is empty so CI wrappers piping stdout see "nothing to look at".
+        self.assertEqual(out, "")
+        self.assertIn("verdict: healthy", err)
 
     def test_unhealthy_dir_exit_two(self):
         code, out, err = _run(os.path.join(FIXTURES, "msc001_shell_eval"))
@@ -83,10 +87,12 @@ class CliDisableTests(unittest.TestCase):
         # a HIGH dir with --disable of that rule becomes healthy
         code_before, _, _ = _run(os.path.join(FIXTURES, "msc001_shell_eval"))
         self.assertEqual(code_before, 2)
-        code_after, out, _ = _run("--disable", "MSC-001",
-                                  os.path.join(FIXTURES, "msc001_shell_eval"))
+        code_after, out, err = _run("--disable", "MSC-001",
+                                    os.path.join(FIXTURES, "msc001_shell_eval"))
         self.assertEqual(code_after, 0)
-        self.assertIn("verdict: healthy", out)
+        # rc=0 routes the summary to stderr per CONVENTIONS.md.
+        self.assertEqual(out, "")
+        self.assertIn("verdict: healthy", err)
 
 
 class CliBoundsTests(unittest.TestCase):
