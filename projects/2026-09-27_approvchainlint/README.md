@@ -80,6 +80,10 @@ Findings go to **stdout**; summary lines, errors, and the verdict go
 to **stderr**, so `python -m approvchainlint --json p.json | jq` is
 safe.
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path, tool name, or snippet prints as `<U+200B>`), so the report
+cannot crash a legacy console and cannot conceal the character.
+
 ## Rules
 
 | ID | Severity | What it flags |

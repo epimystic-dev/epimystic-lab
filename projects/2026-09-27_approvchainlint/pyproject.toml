@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "approvchainlint"
-version = "0.1.0"
+version = "0.1.1"
 description = "Static linter for agent-tool approval configuration files - flags shape defects that enable approval laundering across coding-agent permission blocks, MCP tool descriptors, and generic agent-tool configs."
 readme = "README.md"
 license = { file = "LICENSE" }
