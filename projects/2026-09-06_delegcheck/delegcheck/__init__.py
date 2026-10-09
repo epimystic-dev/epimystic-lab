@@ -1,6 +1,6 @@
 """delegcheck: offline static linter for agent-delegation config files."""
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from .types import Severity, Verdict, Finding, ScanResult
 from .rules import ALL_RULES, Rule

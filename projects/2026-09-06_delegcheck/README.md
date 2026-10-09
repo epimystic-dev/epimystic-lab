@@ -123,6 +123,11 @@ findings_visible=3 findings_hidden=0
   MEDIUM DEL-006 config.json:14:7 tool 'shell_exec' has wildcard entry in permitted_agents
 ```
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path or in a credential, tool or agent name prints as
+`<U+200B>`), so the report cannot crash a legacy console and cannot
+conceal the character it is echoing.
+
 ### JSON output shape
 
 Deterministic (sorted keys, fixed indent). Findings are sorted by
