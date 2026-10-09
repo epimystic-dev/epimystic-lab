@@ -13,6 +13,32 @@ def _visible(findings: List[Finding], config: Config) -> List[Finding]:
     return [f for f in findings if f.severity != Severity.INFO]
 
 
+def _printable(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. (The name
+    _visible is taken in this module by the INFO-severity filter above.)
+    There are two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the paths and error lines
+      this tool prints may contain exactly those characters. Echoing them
+      raw crashed the reporter mid-write, so such inputs produced a
+      traceback and no finding at all.
+    * A hidden character must be made visible in the report, not echoed raw
+      and so concealed a second time in the very output meant to expose it.
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
+
+
 def render_text(result: ScanResult, verdict: Verdict, config: Config) -> str:
     lines: List[str] = []
     visible = _visible(result.findings, config)
@@ -45,7 +71,9 @@ def render_text(result: ScanResult, verdict: Verdict, config: Config) -> str:
                 msg=f.message,
             )
         )
-    return "\n".join(lines) + "\n"
+    # Each line is one record; a newline inside a scanned path or error
+    # message is rendered as <U+000A> rather than starting a forged line.
+    return "\n".join(_printable(line) for line in lines) + "\n"
 
 
 def render_json(result: ScanResult, verdict: Verdict, config: Config) -> str:

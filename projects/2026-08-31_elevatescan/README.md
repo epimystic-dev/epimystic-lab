@@ -97,6 +97,10 @@ findings_visible=3 findings_hidden=0
   MEDIUM ESC-006 notes.md:12:1 tool-output marker followed by imperative directive in same content
 ```
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path prints as `<U+200B>`), so the report cannot crash a legacy
+console.
+
 ### JSON output shape
 
 Deterministic (sorted keys, fixed indent). Findings are sorted by

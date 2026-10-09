@@ -10,7 +10,7 @@ from .scanner import scan_path, discover, read_text, strip_bom
 from .verdict import compute_verdict
 from .report import render_text, render_json
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "Severity",
