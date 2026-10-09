@@ -7,6 +7,32 @@ from typing import List, Iterable
 from .rules import Finding, Severity
 
 
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the manifest path and the
+      component names this tool echoes can contain exactly those
+      characters. Echoing them raw crashed the reporter mid-write, so the
+      manifest produced a traceback and no finding at all.
+    * A concealed character must be made visible in the report, not echoed
+      raw and so concealed a second time in the very output meant to expose
+      it.
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
+
+
 def format_text(findings: List[Finding], source_label: str = "") -> str:
     """Human-readable report suitable for CLI output.
 
@@ -18,7 +44,7 @@ def format_text(findings: List[Finding], source_label: str = "") -> str:
 
     if not findings:
         lines.append("no findings.")
-        return "\n".join(lines) + "\n"
+        return "\n".join(_visible(line) for line in lines) + "\n"
 
     for f in findings:
         prefix = f"[{f.severity.value.upper():5s}] {f.rule}"
@@ -33,7 +59,9 @@ def format_text(findings: List[Finding], source_label: str = "") -> str:
     lines.append(
         f"summary: {err} error(s), {warn} warning(s), {info} info"
     )
-    return "\n".join(lines) + "\n"
+    # Each line is one record; a newline inside a path or component name is
+    # rendered as <U+000A> rather than starting a forged line of its own.
+    return "\n".join(_visible(line) for line in lines) + "\n"
 
 
 def format_json(findings: List[Finding], source_label: str = "") -> str:

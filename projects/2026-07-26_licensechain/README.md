@@ -189,6 +189,11 @@ bytes on stdout and the `no findings` summary on stderr, so `jq` or
 `test -s` gates that pipe stdout do not trip on diagnostic prose. Use
 `--json` for a stdout payload consumers can parse.
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a component name or manifest path prints as `<U+200B>`), so the
+report cannot crash a legacy console and cannot conceal the character it
+is echoing.
+
 **Bad chain** (dropped obligations):
 
 ```
