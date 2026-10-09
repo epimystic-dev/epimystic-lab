@@ -4,7 +4,7 @@ Rule catalog
 ------------
 JWT-A001 (error): JWT algorithm is set to `none` (alg=none defeats verification).
 JWT-A002 (error): HMAC (HS256/HS384/HS512) secret shorter than the minimum
-                  RFC 7518 §3.2 recommendation (>= the hash byte length: 32/48/64 bytes).
+                  RFC 7518 section 3.2 recommendation (>= the hash byte length: 32/48/64 bytes).
 JWT-A003 (error): JWT secret is empty.
 JWT-A004 (error): JWT secret matches a well-known weak default
                   (e.g. `secret`, `changeme`, `your-256-bit-secret`).
@@ -143,7 +143,7 @@ _PLACEHOLDER_PATTERNS = (
 )
 
 # ---------------------------------------------------------------------------
-# Algorithm minimum secret sizes (bytes), from RFC 7518 §3.2:
+# Algorithm minimum secret sizes (bytes), from RFC 7518 section 3.2:
 #   "A key of the same size as the hash output (for instance, 256 bits for
 #   HS256) or larger MUST be used with this algorithm."
 # We compare against the raw byte length of the secret as declared.
@@ -365,7 +365,7 @@ def audit_env(
                         severity="error",
                         message=(
                             f"{entry.key}: {algo} requires >= {minimum} bytes "
-                            f"(RFC 7518 §3.2); got {n_bytes}"
+                            f"(RFC 7518 section 3.2); got {n_bytes}"
                         ),
                         key=entry.key,
                         line=entry.line,

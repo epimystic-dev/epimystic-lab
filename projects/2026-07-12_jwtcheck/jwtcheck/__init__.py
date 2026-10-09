@@ -3,7 +3,7 @@
 from jwtcheck.audit import Finding, audit_env, audit_file
 from jwtcheck.parse import EnvEntry, ParseError, parse_env
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "EnvEntry",

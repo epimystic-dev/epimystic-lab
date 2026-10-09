@@ -98,12 +98,39 @@ def _filter(findings: Sequence[Finding], min_severity: str) -> List[Finding]:
     return [f for f in findings if f.severity == "error"]
 
 
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the findings this tool
+      prints echo file paths and key names that may hold exactly those
+      characters. Echoing them raw crashed the reporter mid-write, so such
+      inputs produced a traceback and no finding at all.
+    * A hidden character must be made visible in the report, not echoed
+      raw and so concealed a second time in the very output meant to expose
+      it (a secret key whose name only looks Latin is a finding of its own).
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
+
+
 def _emit_text(findings: Sequence[Finding], stream) -> None:
     for f in findings:
         src = f.source or "-"
-        stream.write(
-            f"{src}:{f.line}:{f.col}: {f.severity}: {f.rule}: {f.message}\n"
-        )
+        # One line per finding; a newline inside echoed input is rendered as
+        # <U+000A> rather than starting a forged line of its own.
+        line = f"{src}:{f.line}:{f.col}: {f.severity}: {f.rule}: {f.message}"
+        stream.write(_visible(line) + "\n")
 
 
 def _emit_json(findings: Sequence[Finding], stream) -> None:

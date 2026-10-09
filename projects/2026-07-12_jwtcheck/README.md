@@ -2,7 +2,7 @@
 
 A tiny, zero-dependency JWT / auth-secret hygiene linter for `.env` files.
 Reports weak defaults, empty secrets, placeholder patterns, low-entropy
-values, `alg=none`, and HMAC secrets shorter than the RFC 7518 §3.2
+values, `alg=none`, and HMAC secrets shorter than the RFC 7518 section 3.2
 recommended minimum.
 
 ## Why
@@ -52,12 +52,17 @@ Exit codes:
 | 1 | Warnings only |
 | 2 | Errors, or I/O / parse failure |
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path or a Cyrillic letter in a key prints as `<U+200B>` or
+`<U+0430>`), so the report cannot crash a legacy console and cannot conceal
+the character it is echoing.
+
 ## Rules
 
 | Rule | Severity | Check |
 |---|---|---|
 | `JWT-A001` | error | `alg=none` (disables signature verification) |
-| `JWT-A002` | error | HS256 / HS384 / HS512 secret shorter than 32 / 48 / 64 bytes (RFC 7518 §3.2) |
+| `JWT-A002` | error | HS256 / HS384 / HS512 secret shorter than 32 / 48 / 64 bytes (RFC 7518 section 3.2) |
 | `JWT-A003` | error | JWT secret is empty |
 | `JWT-A004` | error | JWT secret matches a well-known weak default (`secret`, `changeme`, `your-256-bit-secret`, ...) |
 | `JWT-A005` | warn  | JWT secret matches a placeholder pattern (`<REPLACE_ME>`, `{{VAR}}`, `TODO`, ...) |
@@ -143,7 +148,7 @@ python -m unittest discover -s tests
 
 ## Provenance and honesty
 
-- **Clean-room.** Built from the JWT / RFC 7518 §3.2 minimum-key-size
+- **Clean-room.** Built from the JWT / RFC 7518 section 3.2 minimum-key-size
   spec, the aggregated 2026 pain-signal cluster (public complaint data),
   and the twelve-factor-app convention for env-based configuration. Not
   derived from any specific existing linter's source.
