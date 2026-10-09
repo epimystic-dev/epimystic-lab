@@ -32,6 +32,33 @@ def visible_findings(result: ScanResult, include_info: bool) -> List[Finding]:
     return [f for f in result.findings if f.severity != Severity.INFO]
 
 
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the file paths, property
+      paths, quoted rule ids, and matched strings this tool echoes can carry
+      exactly those characters. Echoing them raw crashed the reporter
+      mid-write, so the input produced a traceback and no finding at all.
+      repr() alone is not enough: it keeps a printable non-ASCII letter raw.
+    * A concealed character must be made visible in the report, not echoed
+      raw and so concealed a second time in the very output meant to expose
+      it.
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
+
+
 def format_findings_text(
     result: ScanResult,
     include_info: bool = False,
@@ -50,7 +77,9 @@ def format_findings_text(
         lines.append(line)
     if not lines:
         return ""
-    return "\n".join(lines) + "\n"
+    # Each line is one record; a newline inside a path or an echoed string
+    # is rendered as <U+000A> rather than starting a forged line of its own.
+    return "\n".join(_visible(line) for line in lines) + "\n"
 
 
 def format_summary_text(
@@ -89,7 +118,7 @@ def format_summary_text(
         lines.append("NOTE " + note)
     for error in result.errors:
         lines.append("ERROR " + error)
-    return "\n".join(lines) + "\n"
+    return "\n".join(_visible(line) for line in lines) + "\n"
 
 
 def finding_to_dict(finding: Finding, show_matches: bool = False) -> Dict[str, Any]:

@@ -7,7 +7,7 @@ validator and a clean run does not mean any endpoint will accept the file.
 
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from .types import Finding, Options, Profile, ScanResult, Severity, Verdict
 from .rules import ALL_RULES, Rule

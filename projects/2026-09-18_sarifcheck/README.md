@@ -66,6 +66,10 @@ for those extensions.
 Findings go to **stdout**; all labels, summaries and diagnostics go to
 **stderr**, so `python -m sarifcheck --json x.sarif | jq` is safe.
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path or a `--show-matches` string prints as `<U+200B>`), so the
+report cannot crash a legacy console and cannot conceal the character.
+
 ## Rules
 
 | ID | Severity | What it flags |

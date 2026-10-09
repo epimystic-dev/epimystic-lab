@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sarifcheck"
-version = "0.1.0"
+version = "0.1.1"
 description = "Offline static linter for SARIF 2.1.0 result files (absolute host paths, unresolvable rule references, missing fingerprints, documented ingest ceilings)."
 readme = "README.md"
 requires-python = ">=3.9"
