@@ -160,6 +160,11 @@ bytes on stdout and routes the verdict rollup to stderr, so `jq` or
 `test -s` gates that pipe stdout do not trip on diagnostic prose. Use
 `--json` for a stdout payload consumers can parse.
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in quoted evidence or a path prints as `<U+200B>`), so the report
+cannot crash a legacy console and cannot conceal the character it is
+quoting.
+
 **Banned repo** (findings on stdout):
 
 ```bash
