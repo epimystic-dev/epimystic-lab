@@ -16,7 +16,7 @@ from oraclecheck.scanner import scan_path, discover_test_files, read_source
 from oraclecheck.report import build_report, render_json, render_text
 from oraclecheck.verdict import rollup_verdict
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "Finding",

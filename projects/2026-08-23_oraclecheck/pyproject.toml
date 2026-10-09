@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oraclecheck"
-version = "0.2.0"
+version = "0.2.1"
 description = "Offline linter for Python test files that detects state-anchored oracles: assertions whose expected value flows from the system under test, so the comparison cancels under mutation and cannot fail."
 readme = "README.md"
 requires-python = ">=3.10"

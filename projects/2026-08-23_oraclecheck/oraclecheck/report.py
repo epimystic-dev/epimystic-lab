@@ -36,6 +36,31 @@ def render_json(report: dict) -> str:
     return json.dumps(report, indent=2, sort_keys=True)
 
 
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the paths, identifiers and
+      error lines this tool prints may contain exactly those characters.
+      Echoing them raw crashed the reporter mid-write, so such inputs
+      produced a traceback and no finding at all.
+    * A hidden character must be made visible in the report, not echoed raw
+      and so concealed a second time in the very output meant to expose it.
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
+
+
 def render_text(report: dict) -> str:
     lines: List[str] = []
     for f in report["findings"]:
@@ -47,4 +72,6 @@ def render_text(report: dict) -> str:
         f"findings={report['findings_total']} visible={report['findings_visible']}, "
         f"exit={report['exit_code']})"
     )
-    return "\n".join(lines) + "\n"
+    # Each line is one record; a newline inside a scanned path or message is
+    # rendered as <U+000A> rather than starting a forged line of its own.
+    return "\n".join(_visible(line) for line in lines) + "\n"

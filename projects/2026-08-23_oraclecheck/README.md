@@ -146,6 +146,10 @@ JSON payload always goes to stdout regardless of verdict. See
 `docs/CONVENTIONS.md` (Stdout / stderr discipline) in the epimystic-lab
 mono-repo for the cross-tool contract.
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path or a Cyrillic letter in an identifier prints as
+`<U+200B>` or `<U+0430>`), so the report cannot crash a legacy console.
+
 ## Honest scope and limits
 
 - **Pattern-based, not proof.** `oraclecheck` inspects source shape via
