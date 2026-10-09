@@ -6,7 +6,7 @@ whether any notebook reproduces - it reports shapes in the stored file.
 
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from .types import NOTEBOOK_LEVEL, Finding, ScanResult, Severity, Verdict
 from .rules import ALL_RULES, Rule, RuleConfig

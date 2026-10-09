@@ -132,6 +132,10 @@ and every per-file diagnostic go to **stderr**. A clean run therefore writes
 nothing at all to stdout, so `nbshape --json . | jq` never sees the tool's own
 commentary. This follows `epimystic-lab/docs/CONVENTIONS.md`.
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path or an echoed cell fragment prints as `<U+200B>`), so the
+report cannot crash a legacy console and cannot conceal the character.
+
 ### Try it
 
 ```bash

@@ -36,6 +36,32 @@ def visible_findings(result: ScanResult, include_info: bool) -> List[Finding]:
     ]
 
 
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the notebook paths, path
+      literals, and cell ids this tool echoes can carry exactly those
+      characters. Echoing them raw crashed the reporter mid-write, so the
+      input produced a traceback and no finding at all.
+    * A concealed character must be made visible in the report, not echoed
+      raw and so concealed a second time in the very output meant to expose
+      it.
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
+
+
 def format_findings(result: ScanResult, include_info: bool = False) -> str:
     """Findings only, for stdout. Empty string when there is nothing to show."""
     lines = []
@@ -47,7 +73,9 @@ def format_findings(result: ScanResult, include_info: bool = False) -> str:
         )
     if not lines:
         return ""
-    return "\n".join(lines) + "\n"
+    # Each line is one record; a newline inside a path or an echoed fragment
+    # is rendered as <U+000A> rather than starting a forged line of its own.
+    return "\n".join(_visible(line) for line in lines) + "\n"
 
 
 def format_summary(result: ScanResult, strict: bool = False, include_info: bool = False) -> str:
@@ -73,7 +101,7 @@ def format_summary(result: ScanResult, strict: bool = False, include_info: bool 
     ]
     for e in result.errors:
         lines.append("diagnostic: " + e)
-    return "\n".join(lines) + "\n"
+    return "\n".join(_visible(line) for line in lines) + "\n"
 
 
 def format_json(result: ScanResult, strict: bool = False, include_info: bool = False) -> str:
