@@ -217,16 +217,25 @@ captured. `-` = complies (0 bytes on stdout on silent clean run):
 | nbshape        | `examples/healthy_notebook.ipynb`         | 0        | 0 bytes                                                                                  | yes      |
 | sarifcheck     | `examples/healthy_results.sarif`          | 0        | 0 bytes                                                                                  | yes      |
 
-Five tools uphold the "empty stdout on silent clean run" discipline today:
-`jsonlcheck`, `envcheck`, `jwtcheck`, `nbshape`, `sarifcheck`. Nine emit a
-clean-run summary line (or a multi-line report) to stdout: `reqcheck`,
-`licensechain`, `aicontribcheck`, `skillcheck`, `agentmdlint`, `oraclecheck`,
-`elevatescan`, `delegcheck`, `mcpservercheck`. A CI job that pipes the tool's
-stdout into `jq` cannot yet rely on the discipline uniformly - the nine listed
-tools will emit human-readable summary text on stdout that `jq` will reject
-unless the caller also passes `--json`. Convergence to route clean-run
-summaries to stderr is an open item on the maintenance backlog; when it lands
-it will be a minor-version bump per tool, not silent drift.
+At the 2026-09-23 audit, five tools upheld the "empty stdout on silent clean
+run" discipline (`jsonlcheck`, `envcheck`, `jwtcheck`, `nbshape`, `sarifcheck`)
+and nine did not (`reqcheck`, `licensechain`, `aicontribcheck`, `skillcheck`,
+`agentmdlint`, `oraclecheck`, `elevatescan`, `delegcheck`, `mcpservercheck`),
+each emitting a clean-run summary line or multi-line report to stdout. The
+nine-tool convergence campaign ran from 2026-09-24 (reqcheck v0.2.0) to
+2026-10-08 (mcpservercheck v0.2.0, campaign close) as a minor-version bump
+per tool: the exit code is computed before printing so the CLI can route on
+it; `rc == 0` text output routes to stderr; `rc != 0` text output continues
+to go to stdout; the `--json` payload continues to be written to stdout
+byte-for-byte unchanged when requested. Post-campaign empirical re-audit
+2026-10-09: all fourteen originally-audited tools return 0 bytes on stdout
+for a silent `rc=0` clean run against the same fixtures listed above; the
+three-line verdict / counts / visibility summary (or whichever text shape
+the tool prints) now routes to stderr. A CI job that pipes the tool's
+stdout into `jq` or `test -s` can now rely on the discipline uniformly
+across the fourteen linters without having to pass `--json` to force JSON
+mode. The historical audit table above is preserved as the dated empirical
+record that drove the campaign.
 
 ## `--version`
 
