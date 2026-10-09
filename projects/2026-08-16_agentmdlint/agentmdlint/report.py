@@ -60,6 +60,32 @@ def _by_severity(findings) -> Dict[str, int]:
     return counts
 
 
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the paths and heading text
+      this tool echoes can contain exactly those characters. Echoing them
+      raw crashed the reporter mid-write, so the scan produced a traceback
+      and no finding at all.
+    * A concealed character must be made visible in the report, not echoed
+      raw and so concealed a second time in the very output meant to expose
+      it.
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
+
+
 def format_text(report: ScanReport, cfg: Config, strict: bool = False, include_info: bool = False) -> str:
     verdict, exit_code = compute_verdict(report, cfg, strict=strict)
     findings = report.all_findings()
@@ -82,7 +108,7 @@ def format_text(report: ScanReport, cfg: Config, strict: bool = False, include_i
             lines.append("no instruction files found")
         else:
             lines.append("no findings above the display threshold")
-        return "\n".join(lines) + "\n"
+        return "\n".join(_visible(line) for line in lines) + "\n"
 
     lines.append("")
     lines.append("findings (" + str(len(findings)) + "):")
@@ -94,7 +120,9 @@ def format_text(report: ScanReport, cfg: Config, strict: bool = False, include_i
             "  [" + f.severity.value.upper() + "] " + f.rule_id
             + " " + f.path + " " + loc + " " + f.message
         )
-    return "\n".join(lines) + "\n"
+    # Each line is one record; a newline inside a path or heading is
+    # rendered as <U+000A> rather than starting a forged line of its own.
+    return "\n".join(_visible(line) for line in lines) + "\n"
 
 
 def _tool_version() -> str:

@@ -78,7 +78,7 @@ nothing when there is nothing to look at:
 $ agentmdlint examples/healthy_AGENTS.md 2>/dev/null | wc -c
 0
 $ agentmdlint examples/healthy_AGENTS.md 2>&1 >/dev/null
-agentmdlint 0.2.0
+agentmdlint 0.2.1
 root: examples/healthy_AGENTS.md
 files: 1 scanned / 1 seen
 verdict: healthy (exit 0)
@@ -91,6 +91,10 @@ for `AGENTMD-*` rule codes are unchanged. `--json` mode is exempt: the
 JSON payload always goes to stdout regardless of verdict. See
 `docs/CONVENTIONS.md` (Stdout / stderr discipline) in the epimystic-lab
 mono-repo for the cross-tool contract.
+
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a heading or path prints as `<U+200B>`), so the report cannot
+crash a legacy console and cannot conceal the character it is echoing.
 
 ## Exit codes
 
