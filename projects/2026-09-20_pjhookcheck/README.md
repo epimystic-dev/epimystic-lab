@@ -77,6 +77,10 @@ walker matches `package.json` and `**/package.json` by default; add
 Findings go to **stdout**; all labels, summaries, and diagnostics go to
 **stderr**, so `python -m pjhookcheck --json p.json | jq` is safe.
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path, dependency name, or snippet prints as `<U+200B>`), so the
+report cannot crash a legacy console and cannot conceal the character.
+
 ## Rules
 
 | ID | Severity | What it flags |

@@ -4,7 +4,7 @@ install-time supply-chain shapes.
 Zero dependencies. Python 3.10+.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from .types import Severity, Verdict, Finding, ScanResult
 from .rules import REGISTRY, Check
