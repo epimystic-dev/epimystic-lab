@@ -13,7 +13,7 @@ from skillcheck.rules import evaluate_text, RULES
 from skillcheck.scanner import discover_skill_files, read_skill_file, scan_path
 from skillcheck.report import build_report, report_to_json, report_to_text, exit_code_for
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "Verdict",

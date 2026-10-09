@@ -27,6 +27,32 @@ def report_to_json(report: Report, *, include_info: bool = False) -> str:
     return json.dumps(d, sort_keys=True, indent=2)
 
 
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the excerpts this tool
+      prints are made of exactly those characters. Echoing them raw crashed
+      the reporter mid-write, so the most dangerous inputs produced a
+      traceback and no finding at all.
+    * A concealed character must be made visible in the report, not echoed
+      raw and so concealed a second time in the very output meant to expose
+      it.
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
+
+
 def report_to_text(report: Report, *, include_info: bool = False) -> str:
     lines: List[str] = []
     lines.append(f"verdict: {report.verdict.value}")
@@ -58,7 +84,9 @@ def report_to_text(report: Report, *, include_info: bool = False) -> str:
             )
             if f.excerpt:
                 lines.append(f"      excerpt: {f.excerpt}")
-    return "\n".join(lines)
+    # Each line is one record; a newline inside a scanned excerpt or path is
+    # rendered as <U+000A> rather than starting a forged line of its own.
+    return "\n".join(_visible(line) for line in lines)
 
 
 def exit_code_for(report: Report, *, strict: bool = False) -> int:
