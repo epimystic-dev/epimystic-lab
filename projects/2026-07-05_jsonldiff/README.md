@@ -70,6 +70,11 @@ line 25  - deprecated_field: true
 line 30  MISSING in candidate (baseline: {"id":"x","v":1})
 ```
 
+In the text output, hidden characters render as `<U+XXXX>` (a zero-width
+space in a value or key name prints as `<U+200B>`), so the report cannot
+crash a legacy console and cannot conceal a difference made of an invisible
+character.
+
 JSON output (one record per line):
 
 ```json

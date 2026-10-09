@@ -106,9 +106,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             if change.kind.startswith("parse_error"):
                 parse_errors += 1
             if args.format == "json":
-                print(json.dumps(change.to_json(), ensure_ascii=False))
+                # Default ASCII escaping: lossless once parsed, and it cannot
+                # crash a console that cannot encode a non-ASCII value.
+                print(json.dumps(change.to_json()))
             else:
-                print(_format_text(change))
+                # One line per change; a newline inside a key name is
+                # rendered as <U+000A> rather than starting a forged line.
+                print(_visible(_format_text(change)))
     finally:
         baseline_f.close()
         candidate_f.close()
@@ -121,6 +125,33 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.exit_code and diffs:
         return 1
     return 0
+
+
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the change lines this tool
+      prints echo record values and key names that may hold exactly those
+      characters. Echoing them raw crashed the reporter mid-write, so such
+      inputs produced a traceback and no difference at all.
+    * A hidden character must be made visible in the report, not echoed
+      raw and so concealed a second time in the very output meant to expose
+      it (two values that differ only by an invisible character would
+      otherwise print as identical).
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
 
 
 def _format_text(c: Change) -> str:

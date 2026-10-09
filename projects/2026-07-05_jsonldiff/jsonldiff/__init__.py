@@ -11,4 +11,4 @@ from .core import (
 )
 
 __all__ = ["Change", "diff_files", "diff_records", "diff_streams"]
-__version__ = "0.1.0"
+__version__ = "0.1.1"
