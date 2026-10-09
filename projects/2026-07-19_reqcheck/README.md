@@ -49,7 +49,7 @@ Requires Python 3.8+. No third-party dependencies.
 |------------|----------|--------------------------------------------------------------------------------------------------------------|
 | REQ-A001   | warn     | Unpinned requirement (no exact-version `==X.Y.Z`).                                                           |
 | REQ-A002   | warn     | Missing `--hash=` on a requirement, when the file otherwise pins hashes (or `--require-hashes` is set).      |
-| REQ-A003   | warn     | Package name is edit-distance ≤ 2 from a widely-installed package (typosquat shape).                         |
+| REQ-A003   | warn     | Package name is edit-distance <= 2 from a widely-installed package (typosquat shape).                         |
 | REQ-A004   | warn     | Same package declared more than once (PEP 503-normalized comparison).                                        |
 | REQ-A005   | error    | `--trusted-host` present (disables TLS verification for that host).                                          |
 | REQ-A006   | warn     | VCS URL (`git+`/`hg+`/`svn+`/`bzr+`) without a pinned commit SHA (branch/tag/missing ref).                    |
@@ -92,6 +92,11 @@ Produces:
     $ echo $?
     2
 
+In the text report, hidden characters render as `<U+XXXX>` (a Cyrillic
+letter in a package name prints as `<U+0430>`, a zero-width space in a
+path as `<U+200B>`), so the report cannot crash a legacy console and
+cannot conceal the character it is flagging.
+
 JSON output for CI:
 
     python -m reqcheck --json examples/bad.txt
@@ -123,7 +128,7 @@ Print the tool version (for CI-side version logging):
 - **REQ-A003 uses edit-distance shape.** It is a heuristic, not proof
   of malicious intent - a legitimate fork with a similar name will
   also trip it. The suggested action is "verify intent," not "block."
-- **REQ-A006 accepts any hex string of length ≥ 7 as a commit SHA.** A
+- **REQ-A006 accepts any hex string of length >= 7 as a commit SHA.** A
   seven-hex tag that happens to look like a short SHA would pass the
   check. In practice, tags do not have that shape.
 

@@ -32,6 +32,33 @@ def _severity_of(findings: Iterable[Finding]) -> int:
 CLEAN_TEXT_SUMMARY = "no findings\n"
 
 
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the package names REQ-A007
+      exists to flag are made of exactly those characters (as can be the
+      path of the requirements file). Echoing them raw crashed the reporter
+      mid-write, so the most dangerous inputs produced a traceback and no
+      finding at all.
+    * A concealed character must be made visible in the report, not echoed
+      raw and so concealed a second time in the very output meant to expose
+      it.
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
+
+
 def _format_text(findings: Sequence[Finding]) -> str:
     # The clean-run "no findings" summary is emitted by the caller to
     # stderr per docs/CONVENTIONS.md Stdout / stderr discipline; keeping
@@ -46,7 +73,9 @@ def _format_text(findings: Sequence[Finding]) -> str:
         )
         if f.suggestion:
             lines.append(f"    suggestion: {f.suggestion}")
-    return "\n".join(lines) + "\n"
+    # Each line is one record; a newline inside a path, name or message is
+    # rendered as <U+000A> rather than starting a forged line of its own.
+    return "\n".join(_visible(line) for line in lines) + "\n"
 
 
 def _format_json(findings: Sequence[Finding]) -> str:
