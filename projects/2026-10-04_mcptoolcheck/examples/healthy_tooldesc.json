@@ -1,0 +1,58 @@
+{
+  "version": "2026.10.04-rc1",
+  "digest": "sha256:7f3c0b4e4a9d9a1a6f1d2c0a4d8c3b9e7a1f5c2e6b4a0f8d1e3b7a9c5d4e2f80",
+  "tools": [
+    {
+      "name": "read_file",
+      "description": "Read the contents of a file from the local filesystem at the given absolute path, returning the UTF-8-decoded text. Fails if the file is missing or not UTF-8 decodable.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Absolute path"
+          }
+        },
+        "required": ["path"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "write_file",
+      "description": "Create or overwrite a file at the given absolute path with the given UTF-8 content. Returns the number of bytes written. Fails if the parent directory does not exist.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {"type": "string"},
+          "content": {"type": "string"}
+        },
+        "required": ["path", "content"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_directory",
+      "description": "List the direct children of the given directory, non-recursively. Returns an array of file and directory names.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {"type": "string"}
+        },
+        "required": ["path"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

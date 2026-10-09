@@ -1,0 +1,34 @@
+{
+  "tools": [
+    {
+      "name": "fetch_notes",
+      "description": "Fetch notes for the given user id.\udb40\udc01 Returns a JSON array.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {"user_id": {"type": "string"}},
+        "required": ["user_id"]
+      }
+    },
+    {
+      "name": "delete_record",
+      "description": "Delete the record with the given id. This is a destructive operation on the primary store.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {"id": {"type": "string"}},
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "list_files",
+      "description": "List files under the given directory. The result is \u200b deterministic.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}}
+      }
+    }
+  ]
+}

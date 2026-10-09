@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcptoolcheck"
+version = "0.1.0"
+description = "Static linter for MCP tool-descriptor files (tools/list snapshots, server-side manifests, generic tool-advertise JSON) - flags twelve shape defects that enable approval-view fidelity gaps and silent descriptor drift."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+keywords = ["mcp", "tool-descriptor", "linter", "unicode", "approval", "metadata", "supply-chain"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Security",
+]
+
+[project.scripts]
+mcptoolcheck = "mcptoolcheck.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["mcptoolcheck*"]
+exclude = ["tests*", "examples*"]
