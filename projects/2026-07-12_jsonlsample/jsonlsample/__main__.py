@@ -94,6 +94,18 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def _dump(rec) -> str:
+    """Serialise one sampled record as a JSON line.
+
+    The default ASCII escaping is used on purpose: it is lossless (a JSON
+    reader recovers every character exactly), and it cannot crash a console
+    or pipe whose encoding (for example code page 1252) cannot represent a
+    zero-width space or a Cyrillic letter in a record. Writing such records
+    raw crashed the sampler mid-write and left a truncated sample.
+    """
+    return json.dumps(rec) + "\n"
+
+
 def _open_input(path: str) -> TextIO:
     if path == "-":
         return sys.stdin
@@ -150,7 +162,7 @@ def run(argv: Sequence[str], stdout: TextIO = None, stderr: TextIO = None) -> in
                 return 2
             picked = reservoir_sample(records_iter, ns.count, seed=ns.seed)
             for rec in picked:
-                stdout.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                stdout.write(_dump(rec))
                 emitted += 1
 
         elif ns.fraction is not None:
@@ -158,7 +170,7 @@ def run(argv: Sequence[str], stdout: TextIO = None, stderr: TextIO = None) -> in
                 stderr.write("jsonlsample: --fraction must be in [0.0, 1.0]\n")
                 return 2
             for rec in bernoulli_sample(records_iter, ns.fraction, seed=ns.seed):
-                stdout.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                stdout.write(_dump(rec))
                 emitted += 1
 
         else:  # ns.stratify
@@ -183,7 +195,7 @@ def run(argv: Sequence[str], stdout: TextIO = None, stderr: TextIO = None) -> in
                 records_iter, ns.per_group, key_fn, seed=ns.seed
             )
             for _, rec in picked:
-                stdout.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                stdout.write(_dump(rec))
                 emitted += 1
 
     finally:

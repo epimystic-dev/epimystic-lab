@@ -9,7 +9,7 @@ dependencies.
   probability F. Streaming, O(1) memory.
 - **Stratified reservoir** (`--stratify PATH --per-group K`) -
   independent reservoir of size K per distinct value at a dotted path.
-  O(g·K) memory where g is the number of strata seen.
+  O(g*K) memory where g is the number of strata seen.
 
 Every mode takes a `--seed` for reproducibility. Same input + same seed
 -> byte-identical output.
@@ -17,7 +17,7 @@ Every mode takes a `--seed` for reproducibility. Same input + same seed
 ## Why
 
 Every LLM / ML pipeline hits the same subproblem: given a large JSONL
-file (10⁶-10⁸ rows) of eval results or training candidates, produce a
+file (10^6-10^8 rows) of eval results or training candidates, produce a
 reproducible K-row sample - uniformly, or stratified per label, or as a
 fixed fraction. In practice teams reinvent this with `shuf | head`
 (non-streaming, non-reproducible, non-stratified), fragile
@@ -54,7 +54,7 @@ Uniform sample of 100 rows:
 jsonlsample results.jsonl -n 100 --seed 42 > sample.jsonl
 ```
 
-Bernoulli 1% sample (streaming; sample size ≈ 0.01·n, not exactly):
+Bernoulli 1% sample (streaming; sample size ~ 0.01*n, not exactly):
 ```
 jsonlsample results.jsonl --fraction 0.01 --seed 0 > sample.jsonl
 ```
@@ -78,6 +78,11 @@ Skip malformed lines silently (default: report + exit 2):
 ```
 jsonlsample noisy.jsonl -n 100 --skip-parse-errors > sample.jsonl
 ```
+
+Sampled records are written with JSON's default ASCII escaping, so a hidden
+character such as a zero-width space is written as a JSON escape that any
+JSON reader decodes back exactly, and the output cannot crash a legacy
+console.
 
 ## Exit codes
 
@@ -108,11 +113,11 @@ rather than being silently dropped.
 ## Statistical properties
 
 - **Reservoir** - every k-subset of an n-element stream is equally likely
-  when n > k; when n ≤ k, the sampler returns the whole stream in
+  when n > k; when n <= k, the sampler returns the whole stream in
   source order. Standard Algorithm R (Vitter 1985); one uniform random
   int per element after the first k.
 - **Bernoulli** - sample size is Binomial(n, p): mean np, variance
-  np(1−p). Prefer this mode when you want streaming O(1) memory and can
+  np(1-p). Prefer this mode when you want streaming O(1) memory and can
   tolerate a non-exact sample size.
 - **Stratified** - an independent reservoir per group key; per-group
   size is capped at `--per-group`. Group memory scales with the number
@@ -137,7 +142,7 @@ This tool is intentionally narrow:
   (or the whole group if it has fewer than K rows).
 - Sampling is over records as they appear in the input. If your JSONL
   has been sorted by some field, an early-terminated reservoir sample
-  will inherit that ordering bias only when n ≤ k; once n > k the sample
+  will inherit that ordering bias only when n <= k; once n > k the sample
   is uniform.
 
 ## Example
