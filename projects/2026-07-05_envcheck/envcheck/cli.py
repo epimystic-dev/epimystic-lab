@@ -146,12 +146,42 @@ def _emit_json(diags: List[Diagnostic], tpath: str, epath: Optional[str]) -> Non
         }
         if d.key is not None:
             record["key"] = d.key
-        print(json.dumps(record, ensure_ascii=False))
+        # Default ASCII escaping: lossless once parsed, and it cannot crash a
+        # console that cannot encode a non-ASCII key or path.
+        print(json.dumps(record))
+
+
+def _visible(text: str) -> str:
+    """Render text so that every character is printable ASCII.
+
+    Any character outside printable ASCII is written as <U+XXXX>. There are
+    two reasons, and both matter for this tool in particular:
+
+    * A report must never crash on a console that cannot encode what it is
+      reporting. A Windows console using code page 1252 cannot encode a
+      zero-width space or a Cyrillic letter, and the diagnostics this tool
+      prints echo file paths and key names that may hold exactly those
+      characters. Echoing them raw crashed the reporter mid-write, so such
+      inputs produced a traceback and no diagnostic at all.
+    * A hidden character must be made visible in the report, not echoed
+      raw and so concealed a second time in the very output meant to expose
+      it (a key that looks Latin but is not is a drift bug of its own).
+    """
+    out = []
+    for ch in text:
+        cp = ord(ch)
+        if 32 <= cp < 127:
+            out.append(ch)
+        else:
+            out.append("<U+%04X>" % cp)
+    return "".join(out)
 
 
 def _emit_text(diags: List[Diagnostic], tpath: str, epath: Optional[str]) -> None:
     for d in diags:
-        print(d.format(_file_for(d, tpath, epath)))
+        # One line per diagnostic; a newline inside echoed input is rendered
+        # as <U+000A> rather than starting a forged line of its own.
+        print(_visible(d.format(_file_for(d, tpath, epath))))
 
 
 def _summary(diags: List[Diagnostic]) -> None:

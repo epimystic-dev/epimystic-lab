@@ -56,6 +56,11 @@ envcheck --version
 
 Exit codes: `0` clean, `1` findings, `2` usage or I/O error.
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path or a Cyrillic letter in a key prints as `<U+200B>` or
+`<U+0430>`), so the report cannot crash a legacy console and cannot conceal
+the character it is echoing.
+
 ## Diagnostics
 
 Parser issues (in either file):
