@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcpservercheck"
-version = "0.2.0"
+version = "0.2.1"
 description = "Offline static linter for MCP-server registration config files (.mcp.json, mcp.json, and the mcpServers / servers blocks that MCP clients read on install)."
 readme = "README.md"
 requires-python = ">=3.9"

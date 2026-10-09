@@ -68,6 +68,11 @@ mcpservercheck --version
 
 Exit codes: `0` healthy, `1` needs-attention / unknown, `2` unhealthy / usage error.
 
+In the text report, hidden characters render as `<U+XXXX>` (a zero-width
+space in a path or in a server name, env key or command prints as
+`<U+200B>`), so the report cannot crash a legacy console and cannot
+conceal the character it is echoing.
+
 Test the primitive against the shipped adversarial fixtures:
 
 ```
