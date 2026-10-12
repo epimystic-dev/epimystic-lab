@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from typing import List, Iterable
 
+from . import __version__
 from .rules import Finding, Severity
 
 
@@ -65,11 +66,22 @@ def format_text(findings: List[Finding], source_label: str = "") -> str:
 
 
 def format_json(findings: List[Finding], source_label: str = "") -> str:
-    """Machine-readable JSON report."""
+    """Machine-readable JSON report.
+
+    Top-level shape is the one documented in docs/CONVENTIONS.md as the
+    convergence target for severity-based linters: ``tool`` and ``version``
+    identify the producer so a log aggregator receiving JSON from several
+    lab tools can tell them apart without out-of-band knowledge; ``source``
+    carries the manifest label the findings were derived from; ``findings``
+    and ``summary`` are unchanged from the pre-0.3.0 shape, so existing
+    consumers that read only those two keys continue to work.
+    """
     err = sum(1 for f in findings if f.severity == Severity.ERROR)
     warn = sum(1 for f in findings if f.severity == Severity.WARN)
     info = sum(1 for f in findings if f.severity == Severity.INFO)
     payload = {
+        "tool": "licensechain",
+        "version": __version__,
         "source": source_label,
         "findings": [f.to_dict() for f in findings],
         "summary": {

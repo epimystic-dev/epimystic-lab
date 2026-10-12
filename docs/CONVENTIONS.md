@@ -168,7 +168,7 @@ remains the next open target.
 | envcheck       | `--json` (or `--format json`) | NDJSON: one `{"code","line","column","message","file",...}` per line |
 | jwtcheck       | `--json` (or `--format json`) | JSON array of `{"rule","severity","message","key","line","col","source"}` |
 | reqcheck       | `--json` (or `--format json`) | JSON array of finding objects (`Finding.to_dict()`)           |
-| licensechain   | `--json`            | JSON object: `{"source","findings":[...],"summary":{...}}`   |
+| licensechain   | `--json`            | JSON object: `{"tool","version","source","findings":[...],"summary":{...}}` (0.3.0+; `tool` and `version` additive, pre-0.3.0 keys retained) |
 | aicontribcheck | `--json`            | JSON object: full `RepoReport` (`files_scanned`, `verdict`, ...) |
 | skillcheck     | `--json`            | JSON object: full report (`files_scanned`, `verdict`, ...)       |
 | agentmdlint    | `--json`            | JSON object: full report (`tool`, `version`, `root`, `files`, `findings`, `summary`, `verdict`, `exit_code`) |
@@ -182,8 +182,24 @@ remains the next open target.
 Consumers should pin the tool version and pin the shape they parse. The next
 convergence pass is expected to standardise on `--json` (boolean) and a wrapping
 object of shape `{"tool", "version", "source", "findings": [...], "summary": {...}}`
-across all severity-based linters; when that lands it will be a major-version bump
-per tool, not a silent shape change.
+across all severity-based linters; when that lands for a given tool it will be a
+major-version bump per tool whenever the delta is a breaking restructuring (NDJSON
+or array to wrapping object), and a minor-version bump when the delta is purely
+additive (new top-level keys only, pre-existing keys retained).
+
+Progress trail. `licensechain` 0.3.0 (2026-10-10) opened the shape-convergence
+campaign as the additive-only case: pre-0.3.0 shipped `{source, findings,
+summary}`, 0.3.0 adds `tool` and `version` at the top level with every
+pre-existing key retained, and a `test_shared_contract.py`
+`test_json_mode_top_level_shape` lock asserts both the new keys and the
+pre-existing keys so a future revert surfaces as a shared-contract break.
+`agentmdlint` and `sarifcheck` already ship a top-level `{tool, version, ...}`
+pair (from their first publication) and remain compliant on that axis. The
+remaining severity-based linters (`envcheck` NDJSON, `jwtcheck` JSON array,
+`reqcheck` JSON array, `aicontribcheck`, `skillcheck`, `oraclecheck`,
+`elevatescan`, `delegcheck`, `mcpservercheck`, `nbshape`) still diverge on
+shape; each is a separate convergence tend and will carry its own
+version-bump classification.
 
 ## Stdout / stderr discipline
 

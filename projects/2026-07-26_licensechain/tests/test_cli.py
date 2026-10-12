@@ -132,9 +132,20 @@ class FormatTests(unittest.TestCase):
         try:
             _code, out, _err = _run_cli(["--json", path])
             data = json.loads(out)
+            # Pre-0.3.0 keys still present so existing consumers that read
+            # only `findings` / `summary` continue to work.
             self.assertIn("findings", data)
             self.assertIn("summary", data)
             self.assertGreaterEqual(data["summary"]["total"], 1)
+            # 0.3.0 convergence toward the docs/CONVENTIONS.md target shape
+            # `{tool, version, source, findings, summary}`: `tool` names
+            # the producer and `version` names its version, so a log
+            # aggregator that collects JSON from several lab tools can
+            # tell them apart without out-of-band knowledge.
+            from licensechain import __version__
+            self.assertEqual(data["tool"], "licensechain")
+            self.assertEqual(data["version"], __version__)
+            self.assertIn("source", data)
         finally:
             os.remove(path)
 

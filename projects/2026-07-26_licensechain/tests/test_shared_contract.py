@@ -18,10 +18,13 @@ dirty), so a regression to either fixture also trips.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
 import unittest
+
+from licensechain import __version__
 
 
 PKG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -122,6 +125,42 @@ class SharedContractInvariants(unittest.TestCase):
             "the mystery-lib NOASSERTION line in bad_chain.json; instead "
             "stdout was: " + repr(r.stdout),
         )
+
+    def test_json_mode_top_level_shape(self):
+        # docs/CONVENTIONS.md convergence target for severity-based linters
+        # is a wrapping object of shape
+        # ``{"tool", "version", "source", "findings": [...], "summary": {...}}``.
+        # licensechain reached this shape in 0.3.0; the existing
+        # ``{source, findings, summary}`` keys stay in place for consumers
+        # that only read those, and ``tool`` / ``version`` are the two new
+        # additive keys. This test is the regression lock: if a future
+        # change drops ``tool`` or ``version`` from the top-level payload
+        # the drift surfaces here first.
+        path = os.path.join(EXAMPLES_DIR, "ok_chain.json")
+        r = _run("--json", path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout)
+        self.assertEqual(
+            payload.get("tool"),
+            "licensechain",
+            "JSON top-level must identify the producer; got: "
+            + repr(payload.get("tool")),
+        )
+        self.assertEqual(
+            payload.get("version"),
+            __version__,
+            "JSON top-level version must match the package __version__; "
+            "got: " + repr(payload.get("version")),
+        )
+        # Pre-0.3.0 keys remain so existing CI consumers do not regress.
+        for key in ("source", "findings", "summary"):
+            self.assertIn(
+                key,
+                payload,
+                "pre-0.3.0 top-level key " + repr(key) + " must remain in "
+                "the JSON payload so existing CI consumers do not break; "
+                "got keys: " + repr(sorted(payload.keys())),
+            )
 
 
 if __name__ == "__main__":  # pragma: no cover
