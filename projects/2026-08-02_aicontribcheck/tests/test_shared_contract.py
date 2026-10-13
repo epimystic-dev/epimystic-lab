@@ -27,6 +27,7 @@ fixture also trips a named test here.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -136,6 +137,49 @@ class SharedContractInvariants(unittest.TestCase):
             "for the explicit-ban line in ban_repo/CONTRIBUTING.md; "
             "instead stdout was: " + repr(r.stdout),
         )
+
+    def test_json_mode_top_level_shape(self):
+        # Convergence lock from docs/CONVENTIONS.md Structured output:
+        # the JSON payload must carry the five canonical top-level keys
+        # (tool, version, source, findings, summary) that CI consumers
+        # across the lab can rely on without per-tool knowledge. The
+        # delta at 0.3.0 is additive-only (minor bump): tool, version,
+        # source, and a flat top-level findings list are new; summary
+        # was already present. The pre-0.3.0 keys (root, verdict,
+        # files, required_disclosures, required_attributions,
+        # tools_named) are also asserted so a future revert in either
+        # direction - the additive add or the pre-existing retention -
+        # surfaces here first.
+        from aicontribcheck import __version__
+        path = os.path.join(FIXTURES_DIR, "ban_repo")
+        r = _run("--json", path)
+        self.assertNotEqual(r.returncode, 0, r.stderr)
+        data = json.loads(r.stdout)
+        for key in ("tool", "version", "source", "findings", "summary"):
+            self.assertIn(
+                key, data,
+                "missing convergence key %r in JSON output" % key,
+            )
+        self.assertEqual(data["tool"], "aicontribcheck")
+        self.assertEqual(data["version"], __version__)
+        self.assertEqual(data["source"], path)
+        self.assertIsInstance(data["findings"], list)
+        rules_in_findings = {f["rule"] for f in data["findings"]}
+        self.assertIn(
+            "AICONTRIB-001", rules_in_findings,
+            "flat top-level findings must include the ban_repo "
+            "AICONTRIB-001 explicit-ban finding; got: "
+            + repr(sorted(rules_in_findings)),
+        )
+        for key in (
+            "root", "verdict", "files",
+            "required_disclosures", "required_attributions", "tools_named",
+        ):
+            self.assertIn(
+                key, data,
+                "pre-0.3.0 top-level key %r removed; convergence is "
+                "additive-only (minor bump)" % key,
+            )
 
 
 if __name__ == "__main__":  # pragma: no cover

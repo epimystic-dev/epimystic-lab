@@ -8,6 +8,8 @@ are permitted, banned, or conditional, and emits a structured verdict.
 Zero runtime dependencies; pure Python stdlib.
 """
 
+__version__ = "0.3.0"
+
 from .types import (
     Verdict,
     Severity,
@@ -20,6 +22,7 @@ from .rules import RULES, run_rules, rollup
 from .report import format_text, format_json
 
 __all__ = [
+    "__version__",
     "Verdict",
     "Severity",
     "Finding",
@@ -33,5 +36,3 @@ __all__ = [
     "format_text",
     "format_json",
 ]
-
-__version__ = "0.2.1"

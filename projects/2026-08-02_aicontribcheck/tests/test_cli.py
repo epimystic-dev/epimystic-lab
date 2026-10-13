@@ -147,6 +147,17 @@ class ArgumentTests(_IsolatedRegistry):
         _code, out, _err = _run([str(FIXTURES / "ban_repo"), "--json"])
         parsed = json.loads(out)
         self.assertEqual(parsed["verdict"], "banned")
+        # 0.3.0 convergence keys (additive): tool / version / source /
+        # top-level flat findings. Pre-0.3.0 keys (root, verdict, files,
+        # summary, ...) are retained; they are exercised in other tests
+        # in this file. Locking the new keys here keeps a per-CLI
+        # regression close to the parse-the-JSON invocation itself.
+        import aicontribcheck
+        self.assertEqual(parsed["tool"], "aicontribcheck")
+        self.assertEqual(parsed["version"], aicontribcheck.__version__)
+        self.assertEqual(parsed["source"], str(FIXTURES / "ban_repo"))
+        self.assertIsInstance(parsed["findings"], list)
+        self.assertTrue(parsed["findings"], "flat findings list is empty")
 
 
 class DeterminismTests(_IsolatedRegistry):

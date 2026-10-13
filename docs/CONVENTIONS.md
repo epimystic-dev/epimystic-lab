@@ -169,7 +169,7 @@ remains the next open target.
 | jwtcheck       | `--json` (or `--format json`) | JSON array of `{"rule","severity","message","key","line","col","source"}` |
 | reqcheck       | `--json` (or `--format json`) | JSON array of finding objects (`Finding.to_dict()`)           |
 | licensechain   | `--json`            | JSON object: `{"tool","version","source","findings":[...],"summary":{...}}` (0.3.0+; `tool` and `version` additive, pre-0.3.0 keys retained) |
-| aicontribcheck | `--json`            | JSON object: full `RepoReport` (`files_scanned`, `verdict`, ...) |
+| aicontribcheck | `--json`            | JSON object: `{"tool","version","source","findings":[...],"summary":{...}}` plus pre-0.3.0 keys (`root`, `verdict`, `files`, `required_disclosures`, `required_attributions`, `tools_named`) (0.3.0+; `tool`, `version`, `source`, and the flat top-level `findings` list are additive; pre-0.3.0 keys retained) |
 | skillcheck     | `--json`            | JSON object: full report (`files_scanned`, `verdict`, ...)       |
 | agentmdlint    | `--json`            | JSON object: full report (`tool`, `version`, `root`, `files`, `findings`, `summary`, `verdict`, `exit_code`) |
 | oraclecheck    | `--json`            | JSON object: full report (`files_scanned`, `files_errored`, `findings`, `findings_total`, `findings_visible`, `verdict`, `errors`, `exit_code`) |
@@ -193,13 +193,19 @@ summary}`, 0.3.0 adds `tool` and `version` at the top level with every
 pre-existing key retained, and a `test_shared_contract.py`
 `test_json_mode_top_level_shape` lock asserts both the new keys and the
 pre-existing keys so a future revert surfaces as a shared-contract break.
-`agentmdlint` and `sarifcheck` already ship a top-level `{tool, version, ...}`
-pair (from their first publication) and remain compliant on that axis. The
-remaining severity-based linters (`envcheck` NDJSON, `jwtcheck` JSON array,
-`reqcheck` JSON array, `aicontribcheck`, `skillcheck`, `oraclecheck`,
-`elevatescan`, `delegcheck`, `mcpservercheck`, `nbshape`) still diverge on
-shape; each is a separate convergence tend and will carry its own
-version-bump classification.
+`aicontribcheck` 0.3.0 (2026-10-13) followed as the second additive-only case:
+pre-0.3.0 shipped `{root, verdict, files, required_disclosures,
+required_attributions, tools_named, summary}` (with findings only reachable
+by walking `files[].findings`), 0.3.0 adds `tool`, `version`, `source`, and a
+flat top-level `findings` list; every pre-0.3.0 key retained; the same
+`test_json_mode_top_level_shape` shared-contract invariant locks both
+directions. `agentmdlint` and `sarifcheck` already ship a top-level
+`{tool, version, ...}` pair (from their first publication) and remain
+compliant on that axis. The remaining severity-based linters (`envcheck`
+NDJSON, `jwtcheck` JSON array, `reqcheck` JSON array, `skillcheck`,
+`oraclecheck`, `elevatescan`, `delegcheck`, `mcpservercheck`, `nbshape`)
+still diverge on shape; each is a separate convergence tend and will carry
+its own version-bump classification.
 
 ## Stdout / stderr discipline
 

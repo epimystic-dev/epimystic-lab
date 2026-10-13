@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+from . import __version__
 from .types import RepoReport, Severity, Verdict
 
 
@@ -15,7 +16,26 @@ _ORDER = {
 
 
 def format_json(report: RepoReport) -> str:
-    return json.dumps(report.to_dict(), indent=2, sort_keys=True)
+    """Machine-readable JSON report.
+
+    Top-level shape follows docs/CONVENTIONS.md as the convergence target
+    for severity-based linters: ``tool`` and ``version`` identify the
+    producer so a log aggregator receiving JSON from several lab tools can
+    tell them apart without out-of-band knowledge; ``source`` carries the
+    repository root the findings were derived from; ``findings`` is a flat
+    list of every finding across every scanned file (previously only
+    reachable by walking ``files[].findings``); and ``summary`` is
+    unchanged from the pre-0.3.0 shape. All pre-0.3.0 keys (``root``,
+    ``verdict``, ``files``, ``required_disclosures``,
+    ``required_attributions``, ``tools_named``, ``summary``) are retained
+    so existing consumers continue to work.
+    """
+    payload = report.to_dict()
+    payload["tool"] = "aicontribcheck"
+    payload["version"] = __version__
+    payload["source"] = report.root
+    payload["findings"] = [f.to_dict() for f in report.all_findings()]
+    return json.dumps(payload, indent=2, sort_keys=True)
 
 
 def _visible(text: str) -> str:
