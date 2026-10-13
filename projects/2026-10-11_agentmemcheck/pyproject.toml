@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentmemcheck"
+version = "0.1.0"
+description = "Static linter for agent memory-store files (JSON / JSONL memory records) - flags twelve shape defects enabling the memory-poisoning attack family named ASI06 in OWASP's 2026 Top 10 for Agentic Applications."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+keywords = ["agent", "memory", "linter", "owasp", "asi06", "memory-poisoning", "llm", "safety"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Security",
+]
+
+[project.scripts]
+agentmemcheck = "agentmemcheck.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["agentmemcheck*"]
+exclude = ["tests*", "examples*"]

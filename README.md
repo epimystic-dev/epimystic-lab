@@ -38,6 +38,7 @@ Small, offline, zero-dependency (stdlib-only) hygiene utilities. Each folder has
 | [`pjhookcheck`](projects/2026-09-20_pjhookcheck/) | Static linter for `package.json` lifecycle-hook and install-time supply-chain shapes (fetch-and-exec hooks, url deps, unpinned versions) | Install-time hooks |
 | [`approvchainlint`](projects/2026-09-27_approvchainlint/) | Static linter for agent-tool approval config files (coding-agent permissions, MCP `mcp.json`, generic agent-tool descriptors) - flags approval-laundering shapes (transitive effects beyond the approved invocation) | Agent-tool approvals |
 | [`mcptoolcheck`](projects/2026-10-04_mcptoolcheck/) | Static linter for MCP tool-descriptor files (`tools/list` snapshots, server-side manifests, generic tool-advertise JSON) - flags twelve shape defects enabling approval-view fidelity gaps (invisible TAG / bidi / zero-width / PUA bytes) and silent descriptor drift (missing version-hash pin, annotation-flip inconsistency, permissive inputSchema) | MCP tool descriptors |
+| [`agentmemcheck`](projects/2026-10-11_agentmemcheck/) | Static linter for agent memory-store files (JSON / JSONL memory records, long-term memory snapshots) - flags twelve shape defects enabling the memory-poisoning attack family named ASI06 in OWASP's 2026 Top 10 for Agentic Applications | Agent memory stores |
 | [`seedline`](projects/2026-06-29_seedline/) | One `seed_all(n)` that seeds Python / NumPy / PyTorch RNGs | Reproducibility (lib) |
 
 ## How it is made (and what that means)
