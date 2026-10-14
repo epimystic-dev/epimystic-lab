@@ -138,7 +138,7 @@ def scan_path(path: str) -> Report:
     if not files:
         if not os.path.exists(path):
             errors.append(f"path does not exist: {path}")
-        return _finalize(Report(verdict=Verdict.UNKNOWN, findings=[], files_scanned=[], errors=errors))
+        return _finalize(Report(verdict=Verdict.UNKNOWN, findings=[], files_scanned=[], errors=errors, source=path))
     for f in files:
         text, err = read_skill_file(f)
         if err is not None:
@@ -148,7 +148,7 @@ def scan_path(path: str) -> Report:
         all_findings.extend(evaluate_text(text, f))
         all_findings.extend(evaluate_structural(text, f))
     all_findings.sort(key=Finding.sort_key)
-    return _finalize(Report(verdict=Verdict.UNKNOWN, findings=all_findings, files_scanned=files_used, errors=errors))
+    return _finalize(Report(verdict=Verdict.UNKNOWN, findings=all_findings, files_scanned=files_used, errors=errors, source=path))
 
 
 def _finalize(report: Report) -> Report:

@@ -63,6 +63,14 @@ class Report:
     findings: List[Finding] = field(default_factory=list)
     files_scanned: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
+    # The scanned path (file or directory) the findings were derived from.
+    # Populated by scan_path(); carried on the Report so report_to_json can
+    # surface it as the CLI-output `source` key per the 0.3.0 top-level-shape
+    # convergence. Deliberately NOT included in to_dict() so library
+    # consumers calling Report.to_dict() directly see no change in shape -
+    # the convergence is a CLI-output contract, not a library-datatype
+    # contract.
+    source: str = ""
 
     def to_dict(self) -> dict:
         return {

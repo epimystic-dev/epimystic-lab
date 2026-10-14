@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import List
 
+from skillcheck import __version__
 from skillcheck.verdict import Finding, Report, Verdict, Severity
 
 
@@ -20,10 +21,25 @@ def build_report(verdict: Verdict, findings: List[Finding], files_scanned: List[
 
 
 def report_to_json(report: Report, *, include_info: bool = False) -> str:
+    """Machine-readable JSON report.
+
+    Top-level shape follows docs/CONVENTIONS.md as the convergence target
+    for severity-based linters: `tool` and `version` identify the producer
+    so a log aggregator receiving JSON from several lab tools can tell
+    them apart without out-of-band knowledge; `source` carries the scanned
+    path the findings were derived from; `findings`, `files_scanned`,
+    `errors`, `verdict`, and `summary` are unchanged from the pre-0.3.0
+    shape. All pre-0.3.0 keys are retained so existing consumers continue
+    to work. Added 2026-10-14 as the third additive-only case in the
+    campaign (after licensechain 2026-10-10 and aicontribcheck 2026-10-13).
+    """
     d = report.to_dict()
     if not include_info:
         d["findings"] = [f for f in d["findings"] if f["severity"] != Severity.INFO.value]
         # summary is authoritative regardless of include_info; keep as-is
+    d["tool"] = "skillcheck"
+    d["version"] = __version__
+    d["source"] = report.source
     return json.dumps(d, sort_keys=True, indent=2)
 
 
