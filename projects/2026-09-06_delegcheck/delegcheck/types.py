@@ -50,3 +50,10 @@ class ScanResult:
     files_scanned: int = 0
     findings: Tuple[Finding, ...] = field(default_factory=tuple)
     errors: Tuple[str, ...] = field(default_factory=tuple)
+    # The scanned path (file or directory) the findings were derived from.
+    # Populated by scan_path(); carried on the ScanResult so format_json
+    # can surface it as the CLI-output `source` key per the 0.3.0 top-
+    # level-shape convergence (docs/CONVENTIONS.md Structured output).
+    # Default "" preserves backward compatibility for direct ScanResult
+    # construction in tests and library consumers.
+    source: str = ""

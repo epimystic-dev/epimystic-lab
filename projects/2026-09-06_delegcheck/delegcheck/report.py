@@ -3,6 +3,7 @@
 import json
 from typing import Iterable, List
 
+from . import __version__
 from .types import Finding, ScanResult, Severity, Verdict
 from .verdict import compute_verdict, counts, exit_code_for
 
@@ -70,10 +71,32 @@ def format_text(result: ScanResult, strict: bool = False, include_info: bool = F
 
 
 def format_json(result: ScanResult, strict: bool = False, include_info: bool = False) -> str:
+    """Machine-readable JSON report.
+
+    Top-level shape follows docs/CONVENTIONS.md as the convergence target
+    for severity-based linters: `tool` and `version` identify the producer
+    so a log aggregator receiving JSON from several lab tools can tell
+    them apart without out-of-band knowledge; `source` carries the scanned
+    path the findings were derived from; `summary` carries the dict rollup
+    (`total_findings`, `files_scanned`, `by_severity`) in the shape used
+    by the other converged tools. Pre-0.3.0 keys (`verdict`, `exit_code`,
+    `files_scanned`, `counts`, `findings`, `errors`) are retained
+    unchanged so existing consumers continue to work. Added 2026-10-15 as
+    the fourth additive-only case in the campaign (after licensechain
+    2026-10-10, aicontribcheck 2026-10-13, skillcheck 2026-10-14).
+    """
     verdict = compute_verdict(result, strict=strict)
     high, medium, info = counts(result)
     visible = _visible_findings(result, include_info)
+    # summary is authoritative over the full finding set regardless of
+    # include_info, matching the convention used by skillcheck 0.3.0:
+    # a CI consumer checking summary.total_findings sees the ground
+    # truth of what the tool found, not what the current filter chose
+    # to echo on the wire.
     payload = {
+        "tool": "delegcheck",
+        "version": __version__,
+        "source": result.source,
         "verdict": verdict.value,
         "exit_code": exit_code_for(verdict, strict=strict),
         "files_scanned": result.files_scanned,
@@ -82,6 +105,15 @@ def format_json(result: ScanResult, strict: bool = False, include_info: bool = F
             "medium": medium,
             "info": info,
             "total": len(result.findings),
+        },
+        "summary": {
+            "total_findings": len(result.findings),
+            "files_scanned": result.files_scanned,
+            "by_severity": {
+                "HIGH": high,
+                "MEDIUM": medium,
+                "INFO": info,
+            },
         },
         "findings": [
             {

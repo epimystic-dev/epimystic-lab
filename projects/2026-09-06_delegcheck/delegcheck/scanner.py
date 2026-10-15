@@ -90,4 +90,5 @@ def scan_path(root: str, globs: Sequence[str] = DEFAULT_GLOBS, disabled=frozense
         files_scanned=len(files),
         findings=tuple(all_findings),
         errors=tuple(errors),
+        source=root,
     )
