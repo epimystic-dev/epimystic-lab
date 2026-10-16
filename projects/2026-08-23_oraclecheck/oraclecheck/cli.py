@@ -69,7 +69,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
 
     results = scan_path(args.path, config)
-    report = build_report(results, strict=args.strict, include_info=args.include_info)
+    report = build_report(
+        results,
+        strict=args.strict,
+        include_info=args.include_info,
+        source=args.path,
+    )
 
     exit_code = int(report["exit_code"])
 

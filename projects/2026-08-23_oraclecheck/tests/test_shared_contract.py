@@ -8,6 +8,12 @@ them directly against the ``python -m oraclecheck`` subprocess entry point:
   2. ``python -m <tool>`` on a known-clean input returns rc 0.
   3. ``python -m <tool>`` on a known-dirty input returns non-zero.
 
+The ``test_json_mode_top_level_shape`` invariant below additionally locks
+the 0.3.0 JSON top-level shape convergence target documented in
+CONVENTIONS.md Structured output: ``tool``, ``version``, ``source``,
+``findings``, and ``summary`` top-level keys, with every pre-0.3.0 key
+retained alongside (additive-only convergence).
+
 These invariants are exercised indirectly by other files in this suite, but
 this file collects them in one named contract test so any regression against
 CONVENTIONS.md surfaces here first. The clean/dirty inputs are the shipped
@@ -18,6 +24,7 @@ trips.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -100,6 +107,75 @@ class SharedContractInvariants(unittest.TestCase):
             "expected the verdict line on stderr for a rc=0 text-mode "
             "run; stderr was: " + repr(r.stderr),
         )
+
+    def test_json_mode_top_level_shape(self):
+        # 0.3.0 convergence lock (docs/CONVENTIONS.md Structured output).
+        # The target wrapping-object shape is
+        # `{"tool", "version", "source", "findings": [...], "summary": {...}}`
+        # with pre-0.3.0 keys (`verdict`, `exit_code`, `files_scanned`,
+        # `files_errored`, `findings_total`, `findings_visible`, `errors`)
+        # additionally retained for backward compatibility. We assert on
+        # the clean-input case so neither the include-info toggle nor
+        # verdict-rollup state is in the way; the empty-findings list
+        # still has to be a list, not an absent key, and the summary dict
+        # still has to carry total_findings / files_scanned / by_severity
+        # (which is where a convergence-aware consumer reads the rollup).
+        path = os.path.join(EXAMPLES_DIR, "healthy_test.py")
+        self.assertTrue(
+            os.path.isfile(path),
+            "examples/healthy_test.py is a documented artifact; "
+            "missing here means the example fixture regressed.",
+        )
+        r = _run("--json", path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout)
+        self.assertEqual(payload.get("tool"), "oraclecheck")
+        # Match the package's own __version__ so a future bump keeps the
+        # lock aligned without a manual edit here.
+        import oraclecheck
+        self.assertEqual(payload.get("version"), oraclecheck.__version__)
+        self.assertIn("source", payload)
+        self.assertTrue(
+            payload["source"].endswith("healthy_test.py")
+            or payload["source"] == path,
+            "expected source to echo the scanned path; got: "
+            + repr(payload.get("source")),
+        )
+        self.assertIsInstance(payload.get("findings"), list)
+        self.assertIsInstance(payload.get("summary"), dict)
+        for sub_key in ("total_findings", "files_scanned", "by_severity"):
+            self.assertIn(
+                sub_key,
+                payload["summary"],
+                "summary sub-key '" + sub_key + "' missing; the "
+                "convergence target shape requires total_findings, "
+                "files_scanned, and by_severity (see "
+                "docs/CONVENTIONS.md Structured output).",
+            )
+        for sev_key in ("HIGH", "MEDIUM", "INFO"):
+            self.assertIn(
+                sev_key,
+                payload["summary"]["by_severity"],
+                "summary.by_severity sub-key '" + sev_key + "' missing; "
+                "oraclecheck's severity tiers are HIGH / MEDIUM / INFO.",
+            )
+        # Pre-0.3.0 keys must still be present (additive-only convergence).
+        for pre_key in (
+            "verdict",
+            "exit_code",
+            "files_scanned",
+            "files_errored",
+            "findings_total",
+            "findings_visible",
+            "errors",
+        ):
+            self.assertIn(
+                pre_key,
+                payload,
+                "pre-0.3.0 top-level key '" + pre_key + "' missing; the "
+                "convergence must be additive-only (see "
+                "docs/CONVENTIONS.md Structured output).",
+            )
 
     def test_known_dirty_input_returns_nonzero(self):
         # Invariant 3: a run with findings must exit non-zero so the same

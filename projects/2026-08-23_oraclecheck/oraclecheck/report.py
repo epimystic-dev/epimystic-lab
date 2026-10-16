@@ -5,24 +5,67 @@ from __future__ import annotations
 import json
 from typing import Iterable, List
 
+from oraclecheck import __version__
 from oraclecheck.types import Finding, ScanResult, Severity, Verdict
 from oraclecheck.verdict import rollup_verdict
 
 
-def build_report(results: List[ScanResult], strict: bool, include_info: bool) -> dict:
+def build_report(
+    results: List[ScanResult],
+    strict: bool,
+    include_info: bool,
+    source: str = "",
+) -> dict:
+    """Shape the per-file results into the lab's structured report dict.
+
+    Top-level shape follows docs/CONVENTIONS.md as the convergence target
+    for severity-based linters: `tool` and `version` identify the producer
+    so a log aggregator receiving JSON from several lab tools can tell
+    them apart without out-of-band knowledge; `source` carries the scanned
+    path the findings were derived from; `summary` carries the dict rollup
+    (`total_findings`, `files_scanned`, `by_severity`) in the shape used
+    by the other converged tools. All pre-0.3.0 keys (`verdict`,
+    `exit_code`, `files_scanned`, `files_errored`, `findings_total`,
+    `findings_visible`, `findings`, `errors`) are retained unchanged so
+    existing consumers continue to work. The `source` parameter defaults
+    to `""` so library callers that constructed `build_report(results,
+    strict, include_info)` positionally pre-0.3.0 keep working with no
+    edit; the CLI threads the scanned path in. Added 2026-10-16 as the
+    fifth additive-only case in the campaign (after licensechain
+    2026-10-10, aicontribcheck 2026-10-13, skillcheck 2026-10-14,
+    delegcheck 2026-10-15).
+    """
     files_scanned = sum(1 for r in results if r.error is None)
     all_findings: List[Finding] = []
     for r in results:
         all_findings.extend(r.findings)
     visible = [f for f in all_findings if include_info or f.severity != Severity.INFO]
     verdict, exit_code = rollup_verdict(files_scanned, all_findings, strict)
+    # summary is authoritative over the full finding set regardless of
+    # include_info, matching the convention used by skillcheck 0.3.0 and
+    # delegcheck 0.3.0: a CI consumer checking summary.total_findings sees
+    # the ground truth of what the tool found, not what the current filter
+    # chose to echo on the wire.
+    by_severity = {
+        "HIGH": sum(1 for f in all_findings if f.severity == Severity.HIGH),
+        "MEDIUM": sum(1 for f in all_findings if f.severity == Severity.MEDIUM),
+        "INFO": sum(1 for f in all_findings if f.severity == Severity.INFO),
+    }
     return {
+        "tool": "oraclecheck",
+        "version": __version__,
+        "source": source,
         "verdict": verdict.value,
         "exit_code": exit_code,
         "files_scanned": files_scanned,
         "files_errored": sum(1 for r in results if r.error is not None),
         "findings_total": len(all_findings),
         "findings_visible": len(visible),
+        "summary": {
+            "total_findings": len(all_findings),
+            "files_scanned": files_scanned,
+            "by_severity": by_severity,
+        },
         "findings": [f.to_json_dict() for f in sorted(visible, key=lambda f: f.sort_key())],
         "errors": [
             {"path": r.path, "error": r.error}

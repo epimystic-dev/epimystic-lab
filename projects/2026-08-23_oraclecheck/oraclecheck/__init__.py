@@ -1,5 +1,11 @@
 """oraclecheck: offline AST linter for state-anchored test oracles in Python."""
 
+# __version__ is assigned before any submodule import so submodules (notably
+# oraclecheck.report, which stamps `version` onto the 0.3.0 JSON top-level
+# shape) can `from oraclecheck import __version__` without tripping the
+# half-initialized-package import ordering.
+__version__ = "0.3.0"
+
 from oraclecheck.types import Finding, Severity, Verdict, ScanResult, RuleSpec
 from oraclecheck.rules import ALL_RULES, RULE_REGISTRY, evaluate_module
 
@@ -15,8 +21,6 @@ Rule = RuleSpec
 from oraclecheck.scanner import scan_path, discover_test_files, read_source
 from oraclecheck.report import build_report, render_json, render_text
 from oraclecheck.verdict import rollup_verdict
-
-__version__ = "0.2.1"
 
 __all__ = [
     "Finding",
