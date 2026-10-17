@@ -87,7 +87,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     verdict = compute_verdict(result, config)
     rc = exit_code(verdict, config)
     if ns.json:
-        sys.stdout.write(render_json(result, verdict, config))
+        sys.stdout.write(render_json(result, verdict, config, source=str(path)))
     else:
         # docs/CONVENTIONS.md Stdout / stderr discipline: a silent rc=0
         # text-mode run must produce zero bytes on stdout so downstream

@@ -76,12 +76,26 @@ def render_text(result: ScanResult, verdict: Verdict, config: Config) -> str:
     return "\n".join(_printable(line) for line in lines) + "\n"
 
 
-def render_json(result: ScanResult, verdict: Verdict, config: Config) -> str:
+def render_json(result: ScanResult, verdict: Verdict, config: Config, source: str = "") -> str:
+    # `source` is a keyword parameter with a default of "" so pre-0.3.0
+    # library callers that invoked render_json(result, verdict, config)
+    # positionally keep working unchanged; the CLI threads the scanned
+    # path through so the stamped JSON echoes what the user named.
+    from . import __version__
     counts = {"HIGH": 0, "MEDIUM": 0, "INFO": 0}
     for f in result.findings:
         counts[f.severity.value] += 1
     visible = _visible(result.findings, config)
+    # `summary` is deliberately authoritative over the FULL finding set,
+    # not the --include-info-filtered `visible` slice, so a CI consumer
+    # gating on `summary.total_findings` sees ground truth rather than
+    # what the current filter chose to echo on stdout. Matches the
+    # authoritative-summary convention locked by skillcheck 0.3.0,
+    # delegcheck 0.3.0, and oraclecheck 0.3.0.
     obj = {
+        "tool": "elevatescan",
+        "version": __version__,
+        "source": source,
         "verdict": verdict.value,
         "files_scanned": result.files_scanned,
         "findings_total": len(result.findings),
@@ -100,5 +114,10 @@ def render_json(result: ScanResult, verdict: Verdict, config: Config) -> str:
             }
             for f in visible
         ],
+        "summary": {
+            "total_findings": len(result.findings),
+            "files_scanned": result.files_scanned,
+            "by_severity": dict(counts),
+        },
     }
     return json.dumps(obj, sort_keys=True, indent=2) + "\n"

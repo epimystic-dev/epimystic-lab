@@ -1,12 +1,16 @@
 """Shared CI-consumer contract test (see epimystic-lab/docs/CONVENTIONS.md).
 
-CONVENTIONS.md documents three invariants that CI consumers rely on across
-every lab linter. This file locks the three for elevatescan by asserting
+CONVENTIONS.md documents four invariants that CI consumers rely on across
+every lab linter. This file locks the four for elevatescan by asserting
 them directly against the ``python -m elevatescan`` subprocess entry point:
 
   1. ``python -m <tool> --help`` returns rc 0.
   2. ``python -m <tool>`` on a known-clean input returns rc 0.
   3. ``python -m <tool>`` on a known-dirty input returns non-zero.
+  4. ``python -m <tool> --json`` emits a top-level wrapping object
+     carrying ``tool``, ``version``, ``source``, ``findings``, and
+     ``summary`` keys per the JSON-top-level-shape convergence target
+     documented in docs/CONVENTIONS.md Structured output.
 
 These invariants are exercised indirectly by other files in this suite, but
 this file collects them in one named contract test so any regression against
@@ -18,10 +22,13 @@ trips.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
 import unittest
+
+import elevatescan
 
 
 PKG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -132,6 +139,68 @@ class SharedContractInvariants(unittest.TestCase):
             "chatml role-marker shapes in malicious_notes.md; instead "
             "stdout was: " + repr(r.stdout),
         )
+
+    def test_json_mode_top_level_shape(self):
+        # Invariant 4: --json emits a wrapping object matching the
+        # JSON-top-level-shape convergence target documented in
+        # docs/CONVENTIONS.md Structured output. A CI consumer that
+        # aggregates JSON payloads from several lab linters must be able
+        # to read `tool`, `version`, `source`, `findings`, and `summary`
+        # at the top level with the same shape across every converged
+        # linter without per-tool special-casing. The pre-0.3.0 keys
+        # that have shipped in elevatescan since first publication
+        # (`verdict`, `files_scanned`, `findings_total`,
+        # `findings_visible`, `counts`, `errors`) are additionally
+        # asserted so a future consumer that reads them continues to
+        # work after this convergence pass. The clean fixture
+        # `examples/healthy_notes.md` is used so the assertion stays
+        # stable without per-run pinning: `findings` is a list (may be
+        # empty), `summary` is a dict with the three target keys
+        # (`total_findings`, `files_scanned`, `by_severity`), and
+        # `by_severity` carries all three severity buckets regardless
+        # of whether any finding fell in them.
+        path = os.path.join(EXAMPLES_DIR, "healthy_notes.md")
+        self.assertTrue(
+            os.path.isfile(path),
+            "examples/healthy_notes.md is a documented artifact; missing "
+            "here means the example fixture regressed and the README's "
+            "demonstration input no longer exists.",
+        )
+        r = _run("--json", path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout)
+        self.assertEqual(payload["tool"], "elevatescan")
+        self.assertEqual(payload["version"], elevatescan.__version__)
+        self.assertTrue(
+            payload["source"].endswith("healthy_notes.md"),
+            "expected `source` to echo the scanned path; got: "
+            + repr(payload.get("source")),
+        )
+        self.assertIsInstance(payload["findings"], list)
+        self.assertIsInstance(payload["summary"], dict)
+        self.assertIn("total_findings", payload["summary"])
+        self.assertIn("files_scanned", payload["summary"])
+        self.assertIn("by_severity", payload["summary"])
+        self.assertIn("HIGH", payload["summary"]["by_severity"])
+        self.assertIn("MEDIUM", payload["summary"]["by_severity"])
+        self.assertIn("INFO", payload["summary"]["by_severity"])
+        # Pre-0.3.0 keys retained -- additive-only convergence.
+        for pre_key in (
+            "verdict",
+            "files_scanned",
+            "findings_total",
+            "findings_visible",
+            "counts",
+            "errors",
+        ):
+            self.assertIn(
+                pre_key,
+                payload,
+                "pre-0.3.0 top-level key `"
+                + pre_key
+                + "` is missing from the --json payload; the convergence "
+                "pass must be additive-only and must not drop any key.",
+            )
 
 
 if __name__ == "__main__":  # pragma: no cover
