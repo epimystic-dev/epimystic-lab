@@ -16,6 +16,12 @@ Two contracts are locked here:
      c. ``python -m mcpservercheck`` on a known-dirty input returns non-zero,
         with the MSC-001 diagnostic anchored on stdout.
 
+   The ``test_json_mode_top_level_shape`` invariant below additionally
+   locks the 0.3.0 JSON top-level shape convergence target documented in
+   CONVENTIONS.md Structured output: ``tool``, ``version``, ``source``,
+   ``findings``, and ``summary`` top-level keys, with every pre-0.3.0 key
+   retained alongside (additive-only convergence).
+
    These CI-consumer invariants are exercised indirectly by other files in
    this suite via ``main(argv)`` calls, but this class collects them in one
    named contract test so any regression against CONVENTIONS.md surfaces
@@ -26,6 +32,7 @@ Two contracts are locked here:
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -117,6 +124,65 @@ class SharedContractInvariants(unittest.TestCase):
             "expected the verdict line on stderr for a rc=0 text-mode "
             "run; stderr was: " + repr(r.stderr),
         )
+
+    def test_json_mode_top_level_shape(self):
+        # 0.3.0 convergence lock (docs/CONVENTIONS.md Structured output).
+        # The target wrapping-object shape is
+        # `{"tool", "version", "source", "findings": [...], "summary": {...}}`
+        # with pre-0.3.0 keys (`verdict`, `exit_code`, `files_scanned`,
+        # `counts`, `errors`) additionally retained for backward
+        # compatibility. We assert on the clean-input case so neither the
+        # include-info toggle nor verdict-rollup state is in the way; the
+        # empty-findings list still has to be a list, not an absent key.
+        path = os.path.join(EXAMPLES_DIR, "healthy_mcp.json")
+        self.assertTrue(
+            os.path.isfile(path),
+            "examples/healthy_mcp.json is a documented artifact; missing "
+            "here means the example fixture regressed.",
+        )
+        r = _run("--json", path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout)
+        self.assertEqual(payload.get("tool"), "mcpservercheck")
+        # Match the package's own __version__ so a future bump keeps the
+        # lock aligned without a manual edit here.
+        self.assertEqual(payload.get("version"), mcpservercheck.__version__)
+        self.assertIn("source", payload)
+        self.assertTrue(
+            payload["source"].endswith("healthy_mcp.json")
+            or payload["source"] == path,
+            "expected source to echo the scanned path; got: "
+            + repr(payload.get("source")),
+        )
+        self.assertIsInstance(payload.get("findings"), list)
+        self.assertIsInstance(payload.get("summary"), dict)
+        summary = payload["summary"]
+        for key in ("total_findings", "files_scanned", "by_severity"):
+            self.assertIn(
+                key,
+                summary,
+                "summary is missing '" + key + "'; see "
+                "docs/CONVENTIONS.md Structured output for the target "
+                "summary shape.",
+            )
+        self.assertIsInstance(summary["by_severity"], dict)
+        for sev in ("HIGH", "MEDIUM", "INFO"):
+            self.assertIn(
+                sev,
+                summary["by_severity"],
+                "summary.by_severity is missing '" + sev + "'; the "
+                "converged shape keys all three severities so a CI "
+                "consumer can gate on any one without defensive gets.",
+            )
+        # Pre-0.3.0 keys must still be present (additive-only convergence).
+        for pre_key in ("verdict", "exit_code", "files_scanned", "counts", "errors"):
+            self.assertIn(
+                pre_key,
+                payload,
+                "pre-0.3.0 top-level key '" + pre_key + "' missing; the "
+                "convergence must be additive-only (see "
+                "docs/CONVENTIONS.md Structured output).",
+            )
 
     def test_known_dirty_input_returns_nonzero(self):
         # Invariant 3: a run with findings must exit non-zero so the same

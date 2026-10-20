@@ -50,3 +50,8 @@ class ScanResult:
     files_scanned: int = 0
     findings: Tuple[Finding, ...] = field(default_factory=tuple)
     errors: Tuple[str, ...] = field(default_factory=tuple)
+    # The scanned root path echoed back on the --json wire output so a CI
+    # consumer aggregating JSON from several lab linters can tell which
+    # input produced which payload. Default "" preserves backward
+    # compatibility with pre-0.3.0 direct ScanResult construction.
+    source: str = ""
