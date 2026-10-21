@@ -187,6 +187,67 @@ class SharedContractInvariants(unittest.TestCase):
     def test_unknown_flag_returns_two_via_argparse(self):
         self.assertEqual(_run("--not-a-real-flag").returncode, 2)
 
+    def test_json_mode_top_level_shape(self):
+        # 0.3.0 convergence lock (docs/CONVENTIONS.md Structured output).
+        # The target wrapping-object shape is
+        # `{"tool", "version", "source", "findings": [...], "summary": {...}}`
+        # with pre-0.3.0 keys (`verdict`, `exit_code`, `files_scanned`,
+        # `files_scored`, `files_unknown`, `counts`, `errors`) additionally
+        # retained for backward compatibility. We assert on the clean-input
+        # case so neither the include-info toggle nor verdict-rollup state
+        # is in the way; the empty-findings list still has to be a list,
+        # not an absent key.
+        path = os.path.join(EXAMPLES_DIR, "healthy_notebook.ipynb")
+        self.assertTrue(
+            os.path.isfile(path),
+            "examples/healthy_notebook.ipynb is a documented artifact; missing "
+            "here means the example fixture regressed.",
+        )
+        r = _run("--json", path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout)
+        self.assertEqual(payload.get("tool"), "nbshape")
+        # Match the package's own __version__ so a future bump keeps the
+        # lock aligned without a manual edit here.
+        self.assertEqual(payload.get("version"), nbshape.__version__)
+        self.assertIn("source", payload)
+        self.assertTrue(
+            payload["source"].endswith("healthy_notebook.ipynb")
+            or payload["source"] == path,
+            "expected source to echo the scanned path; got: "
+            + repr(payload.get("source")),
+        )
+        self.assertIsInstance(payload.get("findings"), list)
+        self.assertIsInstance(payload.get("summary"), dict)
+        summary = payload["summary"]
+        for key in ("total_findings", "files_scanned", "by_severity"):
+            self.assertIn(
+                key,
+                summary,
+                "summary is missing '" + key + "'; see "
+                "docs/CONVENTIONS.md Structured output for the target "
+                "summary shape.",
+            )
+        self.assertIsInstance(summary["by_severity"], dict)
+        for sev in ("HIGH", "MEDIUM", "INFO"):
+            self.assertIn(
+                sev,
+                summary["by_severity"],
+                "summary.by_severity is missing '" + sev + "'; the "
+                "converged shape keys all three severities so a CI "
+                "consumer can gate on any one without defensive gets.",
+            )
+        # Pre-0.3.0 keys must still be present (additive-only convergence).
+        for pre_key in ("verdict", "exit_code", "files_scanned",
+                        "files_scored", "files_unknown", "counts", "errors"):
+            self.assertIn(
+                pre_key,
+                payload,
+                "pre-0.3.0 top-level key '" + pre_key + "' missing; the "
+                "convergence must be additive-only (see "
+                "docs/CONVENTIONS.md Structured output).",
+            )
+
 
 class StreamContractTests(unittest.TestCase):
     """CONVENTIONS.md: findings on stdout, human chatter on stderr."""

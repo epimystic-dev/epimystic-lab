@@ -201,4 +201,5 @@ def scan_path(
         files_unknown=len(files) - scored,
         findings=tuple(all_findings),
         errors=tuple(errors),
+        source=root,
     )
