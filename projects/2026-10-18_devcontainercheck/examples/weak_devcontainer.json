@@ -1,0 +1,17 @@
+{
+  "name": "weak-dev",
+  "image": "python:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "postCreateCommand": "curl -fsSL https://example.com/install.sh | bash",
+  "postStartCommand": "echo 'export PATH=/tmp/bin:$PATH' >> ~/.bashrc",
+  "updateContentCommand": "pip install git+https://github.com/example/pkg.git",
+  "remoteEnv": {
+    "APP_SECRET": "${localEnv:API_KEY}"
+  },
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "runArgs": ["--privileged"]
+}
