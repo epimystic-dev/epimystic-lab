@@ -8,6 +8,10 @@ directly against the ``python -m jwtcheck`` subprocess entry point:
   2. ``python -m <tool>`` on a known-clean input returns rc 0.
   3. ``python -m <tool>`` on a known-dirty input returns non-zero.
 
+A fourth invariant - the JSON top-level wrapping shape documented in
+CONVENTIONS.md Structured output - is locked by
+``test_json_mode_top_level_shape``; see jwtcheck 0.2.0 convergence.
+
 These invariants are exercised indirectly by other files in this suite, but
 this file collects them in one named contract test so any regression against
 CONVENTIONS.md surfaces here first. The clean/dirty commands are the same
@@ -18,10 +22,13 @@ regression to either fixture also trips.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
 import unittest
+
+import jwtcheck
 
 
 PKG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -92,6 +99,32 @@ class SharedContractInvariants(unittest.TestCase):
             "JWT_ALGORITHM=none line in bad.env; instead stdout was: "
             + repr(r.stdout),
         )
+
+    def test_json_mode_top_level_shape(self):
+        # Invariant 4 (jwtcheck 0.2.0 convergence): --json emits the lab-wide
+        # wrapping object `{tool, version, source, findings, summary}`
+        # documented in docs/CONVENTIONS.md Structured output. A CI consumer
+        # aggregating JSON across lab linters reads these five keys without
+        # per-tool knowledge. Pre-0.2.0 jwtcheck emitted the bare `findings`
+        # array; this test exists to prevent a regression to that shape.
+        path = os.path.join(EXAMPLES_DIR, "ok.env")
+        r = _run("--json", path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout)
+        self.assertIsInstance(payload, dict)
+        self.assertEqual(payload["tool"], "jwtcheck")
+        self.assertEqual(payload["version"], jwtcheck.__version__)
+        self.assertTrue(
+            payload["source"].endswith("ok.env"),
+            f"expected source to end with 'ok.env'; got {payload['source']!r}",
+        )
+        self.assertIsInstance(payload["findings"], list)
+        self.assertIsInstance(payload["summary"], dict)
+        for key in ("total_findings", "files_scanned", "by_severity"):
+            self.assertIn(key, payload["summary"])
+        self.assertEqual(payload["summary"]["total_findings"], 0)
+        self.assertEqual(payload["summary"]["files_scanned"], 1)
+        self.assertIsInstance(payload["summary"]["by_severity"], dict)
 
 
 if __name__ == "__main__":  # pragma: no cover

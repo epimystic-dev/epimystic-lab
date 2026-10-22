@@ -51,14 +51,22 @@ class TestCLI(unittest.TestCase):
         self.assertIn("JWT-A003", line)
 
     def test_json_output_shape(self):
+        # jwtcheck 0.2.0 emits the lab-wide wrapping shape
+        # `{tool, version, source, findings, summary}` documented in
+        # docs/CONVENTIONS.md Structured output. Pre-0.2.0 emitted the
+        # bare `findings` array.
         path = self._write_tmp_env("JWT_SECRET=\n")
         stdout = io.StringIO()
         rc = run([path, "--format", "json"], stdout=stdout, stderr=io.StringIO())
         self.assertEqual(rc, 2)
         payload = json.loads(stdout.getvalue())
-        self.assertIsInstance(payload, list)
-        self.assertGreaterEqual(len(payload), 1)
-        rec = payload[0]
+        self.assertIsInstance(payload, dict)
+        for top in ("tool", "version", "source", "findings", "summary"):
+            self.assertIn(top, payload)
+        self.assertEqual(payload["tool"], "jwtcheck")
+        self.assertIsInstance(payload["findings"], list)
+        self.assertGreaterEqual(len(payload["findings"]), 1)
+        rec = payload["findings"][0]
         for key in ("rule", "severity", "message", "key", "line", "col", "source"):
             self.assertIn(key, rec)
 
@@ -176,26 +184,31 @@ class JsonAliasFlag(unittest.TestCase):
         self.addCleanup(os.remove, path)
         return path
 
-    def test_json_alias_produces_json_array_on_findings(self):
+    def test_json_alias_produces_wrapping_object_on_findings(self):
         path = self._write_tmp_env("JWT_SECRET=\n")
         stdout = io.StringIO()
         rc = run([path, "--json"], stdout=stdout, stderr=io.StringIO())
         self.assertEqual(rc, 2)
         payload = json.loads(stdout.getvalue())
-        self.assertIsInstance(payload, list)
-        self.assertGreaterEqual(len(payload), 1)
-        rules = {r["rule"] for r in payload}
+        self.assertIsInstance(payload, dict)
+        self.assertIsInstance(payload["findings"], list)
+        self.assertGreaterEqual(len(payload["findings"]), 1)
+        rules = {r["rule"] for r in payload["findings"]}
         self.assertIn("JWT-A003", rules)
 
-    def test_json_alias_clean_input_returns_zero_with_empty_array(self):
+    def test_json_alias_clean_input_returns_zero_with_empty_findings(self):
         path = self._write_tmp_env("DATABASE_URL=postgres://x/y\n")
         stdout, stderr = io.StringIO(), io.StringIO()
         rc = run([path, "--json"], stdout=stdout, stderr=stderr)
         self.assertEqual(rc, 0)
-        # jwtcheck's JSON shape is a single array (not NDJSON); clean input
-        # emits `[]` per the shape documented in docs/CONVENTIONS.md. The
-        # shape convergence is a separate open backlog item.
-        self.assertEqual(json.loads(stdout.getvalue()), [])
+        # Converged shape (jwtcheck 0.2.0): clean input still emits the
+        # wrapping object documented in docs/CONVENTIONS.md Structured
+        # output; the `findings` array inside is empty.
+        payload = json.loads(stdout.getvalue())
+        self.assertIsInstance(payload, dict)
+        self.assertEqual(payload["findings"], [])
+        self.assertEqual(payload["summary"]["total_findings"], 0)
+        self.assertEqual(payload["summary"]["files_scanned"], 1)
 
     def test_json_alias_output_matches_format_json_byte_for_byte(self):
         path = self._write_tmp_env(

@@ -133,8 +133,21 @@ def _emit_text(findings: Sequence[Finding], stream) -> None:
         stream.write(_visible(line) + "\n")
 
 
-def _emit_json(findings: Sequence[Finding], stream) -> None:
-    payload = [
+def _emit_json(
+    findings: Sequence[Finding],
+    stream,
+    *,
+    paths: Sequence[str],
+    files_scanned: int,
+) -> None:
+    # Top-level wrapping shape documented in docs/CONVENTIONS.md Structured
+    # output: `{tool, version, source, findings, summary}`. Pre-0.2.0 jwtcheck
+    # emitted the bare `findings` array; the wrapping is the breaking change
+    # the version bump marks. `by_severity` keys match the Finding.severity
+    # values the per-finding records already carry (`error`, `warn`), so a
+    # consumer that reads `summary.by_severity.error` sees the same term it
+    # would see on each record under `severity`.
+    findings_payload = [
         {
             "rule": f.rule,
             "severity": f.severity,
@@ -146,6 +159,20 @@ def _emit_json(findings: Sequence[Finding], stream) -> None:
         }
         for f in findings
     ]
+    by_severity = {"error": 0, "warn": 0}
+    for f in findings:
+        by_severity[f.severity] = by_severity.get(f.severity, 0) + 1
+    payload = {
+        "tool": "jwtcheck",
+        "version": __version__,
+        "source": ",".join(paths),
+        "findings": findings_payload,
+        "summary": {
+            "total_findings": len(findings_payload),
+            "files_scanned": files_scanned,
+            "by_severity": by_severity,
+        },
+    }
     json.dump(payload, stream, indent=2)
     stream.write("\n")
 
@@ -159,6 +186,7 @@ def run(argv: Sequence[str], stdout=None, stderr=None) -> int:
         ns.format = "json"
 
     all_findings: List[Finding] = []
+    files_scanned = 0
     io_error = False
 
     for raw in ns.paths:
@@ -177,6 +205,7 @@ def run(argv: Sequence[str], stdout=None, stderr=None) -> int:
             stderr.write(f"jwtcheck: {p}: {exc}\n")
             io_error = True
             continue
+        files_scanned += 1
         all_findings.extend(findings)
 
     filtered = _filter(all_findings, ns.severity)
@@ -184,7 +213,12 @@ def run(argv: Sequence[str], stdout=None, stderr=None) -> int:
     if ns.format == "text":
         _emit_text(filtered, stdout)
     else:
-        _emit_json(filtered, stdout)
+        _emit_json(
+            filtered,
+            stdout,
+            paths=list(ns.paths),
+            files_scanned=files_scanned,
+        )
 
     if io_error:
         return _EXIT_ERROR

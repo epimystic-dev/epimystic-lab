@@ -107,8 +107,10 @@ class ConsoleEncodingTests(unittest.TestCase):
         self.assertNotIn("Traceback", err, err)
         doc = json.loads(r.stdout.decode("ascii"))
         self.assertIn("JWT-P001", json.dumps(doc))
-        self.assertIn(ODD_DIR, doc[0]["source"])
-        self.assertIn("JWT_SECRET" + CYRILLIC_A, doc[0]["message"])
+        # jwtcheck 0.2.0 wraps the findings array in a top-level object;
+        # per-finding records are now at `doc["findings"][i]`.
+        self.assertIn(ODD_DIR, doc["findings"][0]["source"])
+        self.assertIn("JWT_SECRET" + CYRILLIC_A, doc["findings"][0]["message"])
         self.assertEqual(r.returncode, 2, err)
 
 
