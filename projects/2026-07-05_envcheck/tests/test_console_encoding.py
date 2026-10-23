@@ -85,9 +85,11 @@ class ConsoleEncodingTests(unittest.TestCase):
         )
 
     def test_json_output_is_ascii_safe(self):
-        # The JSON lines used ensure_ascii=False and crashed the same way.
+        # The JSON payload used ensure_ascii=False and crashed the same way.
         # With the default escaping the output is pure ASCII and lossless:
-        # the parsed record holds the original characters.
+        # the parsed payload holds the original characters.
+        # Convergence (v0.2.0): stdout is now a single wrapping object
+        # `{tool, version, source, findings, summary}`, not NDJSON.
         key = "API_KEY" + CYRILLIC_A
         fx = _Fixture(key + "=1\n", odd_dir=True)
         try:
@@ -96,9 +98,13 @@ class ConsoleEncodingTests(unittest.TestCase):
             fx.close()
         err = r.stderr.decode("cp1252", errors="replace")
         self.assertNotIn("Traceback", err, err)
-        lines = r.stdout.decode("ascii").splitlines()
-        self.assertEqual(len(lines), 1, lines)
-        record = json.loads(lines[0])
+        # The payload is a single JSON document; stdout is pure ASCII.
+        text = r.stdout.decode("ascii")
+        payload = json.loads(text)
+        self.assertEqual(payload["tool"], "envcheck")
+        findings = payload["findings"]
+        self.assertEqual(len(findings), 1, findings)
+        record = findings[0]
         self.assertEqual(record["code"], "E003")
         self.assertEqual(record["key"], key)
         self.assertIn(ODD_DIR, record["file"])

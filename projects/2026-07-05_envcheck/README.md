@@ -41,7 +41,7 @@ envcheck
 # Explicit paths:
 envcheck config/.env.template config/.env.local
 
-# CI-style JSON output, one finding per line (`--format json` also accepted):
+# CI-style JSON output, a single wrapping object (`--format json` also accepted):
 envcheck --json
 
 # Only drift, no secret scan:

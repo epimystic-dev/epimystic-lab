@@ -8,6 +8,12 @@ directly against the ``python -m envcheck`` subprocess entry point:
   2. ``python -m <tool>`` on a known-clean input returns rc 0.
   3. ``python -m <tool>`` on a known-dirty input returns non-zero.
 
+A fourth invariant locks the JSON top-level shape documented in
+``docs/CONVENTIONS.md`` Structured output: a ``--json`` run emits a single
+wrapping object ``{tool, version, source, findings, summary}`` so a CI
+consumer aggregating JSON across several lab linters can tell envcheck's
+payload apart in-band and read the summary rollup from a known path.
+
 These invariants are exercised indirectly by other files in this suite, but
 this file collects them in one named contract test so any regression against
 CONVENTIONS.md surfaces here first. The clean/dirty commands are the same
@@ -19,6 +25,7 @@ either fixture also trips.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -94,6 +101,37 @@ class SharedContractInvariants(unittest.TestCase):
             "REDIS_URL key that template.env documents but local.env omits; "
             "instead stdout was: " + repr(r.stdout),
         )
+
+    def test_json_mode_top_level_shape(self):
+        # Invariant 4: --json emits a single wrapping object with the
+        # top-level keys documented in docs/CONVENTIONS.md. Locks the
+        # breaking-restructure convergence shipped in v0.2.0 against
+        # a regression to NDJSON or a bare findings array. The fixture
+        # is the shipped examples/template.env so the clean-input
+        # assumption holds without per-run pinning.
+        import envcheck
+
+        template = os.path.join(EXAMPLES_DIR, "template.env")
+        self.assertTrue(os.path.isfile(template))
+        r = _run(template, template, "--json", "--quiet")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout)
+        self.assertIsInstance(payload, dict)
+        self.assertEqual(payload["tool"], "envcheck")
+        self.assertEqual(payload["version"], envcheck.__version__)
+        # The CLI was invoked with the same path twice; `source` echoes
+        # both separated by a comma, matching the multi-path convention
+        # locked by jwtcheck 2026-10-22.
+        self.assertTrue(payload["source"].endswith("template.env"))
+        self.assertIn(",", payload["source"])
+        findings = payload["findings"]
+        self.assertIsInstance(findings, list)
+        self.assertEqual(findings, [])
+        summary = payload["summary"]
+        self.assertIsInstance(summary, dict)
+        self.assertEqual(summary["total_findings"], 0)
+        self.assertEqual(summary["files_scanned"], 2)
+        self.assertIsInstance(summary["by_code"], dict)
 
 
 if __name__ == "__main__":  # pragma: no cover

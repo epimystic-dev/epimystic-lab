@@ -119,7 +119,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     diags = check(template, env_parse, opts)
 
     if args.format == "json":
-        _emit_json(diags, str(template_path), str(env_path) if env_path else None)
+        files_scanned = 1 + (1 if env_path is not None else 0)
+        _emit_json(
+            diags,
+            str(template_path),
+            str(env_path) if env_path else None,
+            files_scanned=files_scanned,
+        )
     else:
         _emit_text(diags, str(template_path), str(env_path) if env_path else None)
 
@@ -135,7 +141,15 @@ def _file_for(d: Diagnostic, tpath: str, epath: Optional[str]) -> str:
     return tpath
 
 
-def _emit_json(diags: List[Diagnostic], tpath: str, epath: Optional[str]) -> None:
+def _emit_json(
+    diags: List[Diagnostic],
+    tpath: str,
+    epath: Optional[str],
+    *,
+    files_scanned: int,
+) -> None:
+    findings: List[dict] = []
+    by_code: dict = {}
     for d in diags:
         record = {
             "code": d.code,
@@ -146,9 +160,28 @@ def _emit_json(diags: List[Diagnostic], tpath: str, epath: Optional[str]) -> Non
         }
         if d.key is not None:
             record["key"] = d.key
-        # Default ASCII escaping: lossless once parsed, and it cannot crash a
-        # console that cannot encode a non-ASCII key or path.
-        print(json.dumps(record))
+        findings.append(record)
+        by_code[d.code] = by_code.get(d.code, 0) + 1
+
+    # The paths the user actually named; comma-joined when both are present.
+    # Mirrors the multi-path source convention jwtcheck locked 2026-10-22 and
+    # keeps per-finding `file` attribution authoritative for per-file joins.
+    source = tpath if epath is None else f"{tpath},{epath}"
+
+    payload = {
+        "tool": "envcheck",
+        "version": __version__,
+        "source": source,
+        "findings": findings,
+        "summary": {
+            "total_findings": len(findings),
+            "files_scanned": files_scanned,
+            "by_code": by_code,
+        },
+    }
+    # Default ASCII escaping: lossless once parsed, and it cannot crash a
+    # console that cannot encode a non-ASCII key or path.
+    print(json.dumps(payload))
 
 
 def _visible(text: str) -> str:

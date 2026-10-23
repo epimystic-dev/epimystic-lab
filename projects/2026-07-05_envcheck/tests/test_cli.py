@@ -78,14 +78,25 @@ class CLIBehavior(CLIFixture):
             rc = main(["--quiet"])
         self.assertEqual(rc, 0)
 
-    def test_json_format_emits_ndjson(self):
+    def test_json_format_emits_wrapping_object(self):
+        # Breaking-restructure convergence (v0.2.0): the payload is now a
+        # single wrapping object `{tool, version, source, findings, summary}`
+        # on stdout rather than one JSON record per line (NDJSON). See
+        # docs/CONVENTIONS.md Structured output.
         self._write(".env.example", "A=1\n")
         self._write(".env", "EXTRA=x\n")
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(io.StringIO()):
             rc = main([".env.example", ".env", "--format", "json", "--quiet"])
         self.assertEqual(rc, 1)
-        records = [json.loads(l) for l in buf.getvalue().splitlines() if l.strip()]
+        payload = json.loads(buf.getvalue())
+        self.assertIsInstance(payload, dict)
+        self.assertEqual(payload["tool"], "envcheck")
+        from envcheck import __version__
+        self.assertEqual(payload["version"], __version__)
+        self.assertEqual(payload["source"], ".env.example,.env")
+        records = payload["findings"]
+        self.assertIsInstance(records, list)
         codes = {r["code"] for r in records}
         self.assertIn("D001", codes)
         self.assertIn("D002", codes)
@@ -93,6 +104,11 @@ class CLIBehavior(CLIFixture):
             self.assertIn("file", r)
             self.assertIn("line", r)
             self.assertIn("column", r)
+        summary = payload["summary"]
+        self.assertEqual(summary["total_findings"], len(records))
+        self.assertEqual(summary["files_scanned"], 2)
+        self.assertEqual(summary["by_code"].get("D001", 0), 1)
+        self.assertEqual(summary["by_code"].get("D002", 0), 1)
 
     def test_no_secrets_flag_skips_secret_pattern(self):
         self._write(".env.example", "KEY=AKIA" + "A" * 16 + "\n")
@@ -109,7 +125,8 @@ class CLIBehavior(CLIFixture):
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(io.StringIO()):
             rc = main([".env.example", ".env", "--format", "json", "--quiet"])
-        records = [json.loads(l) for l in buf.getvalue().splitlines() if l.strip()]
+        payload = json.loads(buf.getvalue())
+        records = payload["findings"]
         crlf = [r for r in records if r["code"] == "E007"]
         self.assertTrue(crlf, "expected E007 in output")
         for r in crlf:
@@ -126,26 +143,37 @@ class JsonAliasFlag(CLIFixture):
     toward the single flag name documented in docs/CONVENTIONS.md; before
     this change argparse would reject `--json` with SystemExit(2)."""
 
-    def test_json_alias_produces_ndjson_on_findings(self):
+    def test_json_alias_produces_wrapping_object_on_findings(self):
         self._write(".env.example", "A=1\n")
         self._write(".env", "EXTRA=x\n")
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(io.StringIO()):
             rc = main([".env.example", ".env", "--json", "--quiet"])
         self.assertEqual(rc, 1)
-        records = [json.loads(l) for l in buf.getvalue().splitlines() if l.strip()]
-        codes = {r["code"] for r in records}
+        payload = json.loads(buf.getvalue())
+        codes = {r["code"] for r in payload["findings"]}
         self.assertIn("D001", codes)
         self.assertIn("D002", codes)
 
-    def test_json_alias_clean_input_returns_zero_with_no_stdout(self):
+    def test_json_alias_clean_input_returns_zero_with_empty_findings(self):
+        # Convergence (v0.2.0): a clean --json run now emits the wrapping
+        # object with an empty `findings` list, not zero bytes. The CLI
+        # output discipline for text mode (no bytes on stdout when clean)
+        # is deliberately NOT inherited here: a CI consumer gating on
+        # `summary.total_findings` must still see the identity stamp so
+        # it can confirm which tool wrote the payload.
         self._write(".env.example", "A=1\nB=2\n")
         self._write(".env", "A=1\nB=2\n")
         buf_out, buf_err = io.StringIO(), io.StringIO()
         with redirect_stdout(buf_out), redirect_stderr(buf_err):
             rc = main([".env.example", ".env", "--json", "--quiet"])
         self.assertEqual(rc, 0)
-        self.assertEqual(buf_out.getvalue(), "")
+        payload = json.loads(buf_out.getvalue())
+        self.assertEqual(payload["tool"], "envcheck")
+        self.assertEqual(payload["findings"], [])
+        self.assertEqual(payload["summary"]["total_findings"], 0)
+        self.assertEqual(payload["summary"]["files_scanned"], 2)
+        self.assertEqual(payload["summary"]["by_code"], {})
 
     def test_json_alias_output_matches_format_json_byte_for_byte(self):
         self._write(".env.example", "A=1\nREDIS_URL=redis://x\n")
@@ -168,8 +196,10 @@ class JsonAliasFlag(CLIFixture):
         with redirect_stdout(buf), redirect_stderr(io.StringIO()):
             rc = main([".env.example", ".env", "--json", "--format", "text", "--quiet"])
         self.assertEqual(rc, 1)
-        for line in (l for l in buf.getvalue().splitlines() if l.strip()):
-            json.loads(line)  # would raise if text formatter had run
+        # The whole stdout now parses as a single JSON wrapping object;
+        # a text formatter would emit colon-separated lines that would
+        # fail json.loads.
+        json.loads(buf.getvalue())
 
 
 class VersionFlag(unittest.TestCase):
