@@ -103,6 +103,11 @@ JSON output for CI:
 
 (`--format json` is retained as an alias for existing callers.)
 
+Since 0.3.0 the JSON payload is a single wrapping object of shape
+`{"tool", "version", "source", "findings": [...], "summary": {...}}`
+(matching the lab-wide shape documented in `docs/CONVENTIONS.md`);
+pre-0.3.0 reqcheck emitted a bare `findings` array.
+
 Print the tool version (for CI-side version logging):
 
     python -m reqcheck --version

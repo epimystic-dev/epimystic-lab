@@ -8,6 +8,12 @@ directly against the ``python -m reqcheck`` subprocess entry point:
   2. ``python -m <tool>`` on a known-clean input returns rc 0.
   3. ``python -m <tool>`` on a known-dirty input returns non-zero.
 
+A fourth invariant locked here since 0.3.0 (post the JSON top-level shape
+convergence campaign closed by this tool): the ``--json`` payload is a
+wrapping object stamped with ``tool`` / ``version`` / ``source`` /
+``findings`` / ``summary``, so a CI consumer aggregating JSON across
+several lab linters can identify the tool without out-of-band knowledge.
+
 These invariants are exercised indirectly by other files in this suite, but
 this file collects them in one named contract test so any regression against
 CONVENTIONS.md surfaces here first. The clean/dirty commands are the same
@@ -18,6 +24,7 @@ regression to either fixture also trips.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -115,6 +122,34 @@ class SharedContractInvariants(unittest.TestCase):
             "--trusted-host line in bad.txt; instead stdout was: "
             + repr(r.stdout),
         )
+
+    def test_json_mode_top_level_shape(self):
+        # Fourth invariant: --json emits the lab-wide wrapping object
+        # `{tool, version, source, findings, summary}` documented in
+        # docs/CONVENTIONS.md Structured output. Locked here as part of the
+        # 0.3.0 JSON convergence (reqcheck is the last of the ten
+        # severity-based linters to converge; a regression to the pre-0.3.0
+        # bare-array shape would surface here first). Clean fixture so the
+        # findings list is empty and the identity stamping is still exercised.
+        from reqcheck import __version__
+        path = os.path.join(EXAMPLES_DIR, "ok.txt")
+        r = _run("--json", path)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        payload = json.loads(r.stdout)
+        self.assertEqual(payload["tool"], "reqcheck")
+        self.assertEqual(payload["version"], __version__)
+        self.assertTrue(
+            payload["source"].endswith("ok.txt"),
+            "source should name the fixture that was scanned; got "
+            + repr(payload["source"]),
+        )
+        self.assertIsInstance(payload["findings"], list)
+        self.assertEqual(payload["findings"], [])
+        summary = payload["summary"]
+        self.assertIsInstance(summary, dict)
+        self.assertEqual(summary["total_findings"], 0)
+        self.assertEqual(summary["files_scanned"], 1)
+        self.assertIsInstance(summary["by_severity"], dict)
 
 
 if __name__ == "__main__":  # pragma: no cover

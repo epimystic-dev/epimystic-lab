@@ -78,8 +78,34 @@ def _format_text(findings: Sequence[Finding]) -> str:
     return "\n".join(_visible(line) for line in lines) + "\n"
 
 
-def _format_json(findings: Sequence[Finding]) -> str:
-    return json.dumps([f.to_dict() for f in findings], indent=2, sort_keys=True) + "\n"
+def _format_json(
+    findings: Sequence[Finding],
+    *,
+    source: str,
+    files_scanned: int,
+) -> str:
+    # Top-level wrapping shape documented in docs/CONVENTIONS.md Structured
+    # output: `{tool, version, source, findings, summary}`. Pre-0.3.0 reqcheck
+    # emitted a bare `findings` array; the wrapping is the breaking change the
+    # version bump marks. `by_severity` keys match the Finding.severity values
+    # the per-finding records already carry (`error` / `warn` / `info`), so a
+    # consumer reading `summary.by_severity.error` sees the same term it would
+    # see on each record under `severity`.
+    by_severity = {"error": 0, "warn": 0, "info": 0}
+    for f in findings:
+        by_severity[f.severity] = by_severity.get(f.severity, 0) + 1
+    payload = {
+        "tool": "reqcheck",
+        "version": __version__,
+        "source": source,
+        "findings": [f.to_dict() for f in findings],
+        "summary": {
+            "total_findings": len(findings),
+            "files_scanned": files_scanned,
+            "by_severity": by_severity,
+        },
+    }
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
 
 def _apply_strict(findings: List[Finding]) -> List[Finding]:
@@ -102,20 +128,16 @@ def _apply_strict(findings: List[Finding]) -> List[Finding]:
     return upgraded
 
 
-def _read_stdin_findings(fmt: str, include_info: bool, strict: bool,
-                        stdout: TextIO, stderr: TextIO) -> int:
+def _read_stdin_findings(include_info: bool, strict: bool) -> List[Finding]:
+    # Returns the findings for stdin; the caller handles output so that a
+    # mixed stdin + file-path invocation produces a single JSON wrapping
+    # object rather than two concatenated payloads.
     text = sys.stdin.read()
     pf = parse_text(text, path="<stdin>")
     findings = audit_parsed(pf, include_info=include_info)
     if strict:
         findings = _apply_strict(findings)
-    if fmt == "json":
-        stdout.write(_format_json(findings))
-    elif findings:
-        stdout.write(_format_text(findings))
-    else:
-        stderr.write(CLEAN_TEXT_SUMMARY)
-    return _severity_of(findings)
+    return findings
 
 
 def main(argv: Sequence[str] | None = None,
@@ -170,13 +192,15 @@ def main(argv: Sequence[str] | None = None,
         args.format = "json"
 
     all_findings: List[Finding] = []
+    sources: List[str] = []
+    files_scanned = 0
     exit_code = EXIT_CLEAN
     for path in args.paths:
         if path == "-":
-            code = _read_stdin_findings(
-                args.format, args.include_info, args.strict, stdout, stderr
-            )
-            exit_code = max(exit_code, code)
+            findings = _read_stdin_findings(args.include_info, args.strict)
+            all_findings.extend(findings)
+            sources.append("<stdin>")
+            files_scanned += 1
             continue
         # os.path.isdir short-circuit: on Windows, open() of a directory
         # raises PermissionError (not IsADirectoryError), so a POSIX-only
@@ -209,9 +233,18 @@ def main(argv: Sequence[str] | None = None,
         if args.strict:
             findings = _apply_strict(findings)
         all_findings.extend(findings)
+        sources.append(path)
+        files_scanned += 1
 
+    source_str = ",".join(sources)
     if args.format == "json":
-        stdout.write(_format_json(all_findings))
+        stdout.write(
+            _format_json(
+                all_findings,
+                source=source_str,
+                files_scanned=files_scanned,
+            )
+        )
     elif all_findings:
         stdout.write(_format_text(all_findings))
     else:

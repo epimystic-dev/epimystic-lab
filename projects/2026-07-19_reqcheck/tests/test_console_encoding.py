@@ -98,6 +98,9 @@ class ConsoleEncodingTests(unittest.TestCase):
     def test_json_output_was_already_ascii_safe(self):
         # json.dumps escapes to ASCII by default; lock that in so a future
         # ensure_ascii=False cannot reintroduce the crash on this path.
+        # Post-0.3.0: the JSON payload is a wrapping object; the ASCII-safety
+        # invariant this test guards is unchanged - only the subscripting
+        # path to reach the per-finding rule code is updated.
         fx = _Fixture("req" + CYRILLIC_A + "ests==1.0\n", odd_dir=True)
         try:
             r = _run_cp1252(fx.path, "--json")
@@ -106,8 +109,10 @@ class ConsoleEncodingTests(unittest.TestCase):
         err = r.stderr.decode("cp1252", errors="replace")
         self.assertNotIn("Traceback", err, err)
         doc = json.loads(r.stdout.decode("ascii"))
-        self.assertIn("REQ-A007", json.dumps(doc))
-        self.assertIn(CYRILLIC_A, json.dumps(doc, ensure_ascii=False))
+        self.assertIsInstance(doc, dict)
+        self.assertIn("findings", doc)
+        self.assertIn("REQ-A007", json.dumps(doc["findings"]))
+        self.assertIn(CYRILLIC_A, json.dumps(doc["findings"], ensure_ascii=False))
         self.assertEqual(r.returncode, 1, err)
 
 

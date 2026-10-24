@@ -67,10 +67,26 @@ class CliOnFixtureTests(unittest.TestCase):
         code = main([path, "--format", "json"], stdout=out, stderr=io.StringIO())
         self.assertEqual(code, EXIT_ERROR)
         payload = json.loads(out.getvalue())
-        self.assertIsInstance(payload, list)
-        for row in payload:
+        # Post-0.3.0: wrapping object documented in docs/CONVENTIONS.md
+        # Structured output. The pre-0.3.0 bare-array shape has been replaced.
+        self.assertIsInstance(payload, dict)
+        for top_key in ("tool", "version", "source", "findings", "summary"):
+            self.assertIn(top_key, payload)
+        self.assertEqual(payload["tool"], "reqcheck")
+        self.assertEqual(payload["source"], path)
+        self.assertIsInstance(payload["findings"], list)
+        for row in payload["findings"]:
             for key in ("rule", "severity", "file", "line", "column", "message"):
                 self.assertIn(key, row)
+        summary = payload["summary"]
+        self.assertEqual(summary["total_findings"], len(payload["findings"]))
+        self.assertEqual(summary["files_scanned"], 1)
+        # by_severity rolls up to the same vocabulary each finding carries,
+        # so a consumer that reads `by_severity.error` sees the same term it
+        # would see on each record under `severity`.
+        self.assertIn("by_severity", summary)
+        self.assertIn("error", summary["by_severity"])
+        self.assertGreaterEqual(summary["by_severity"]["error"], 1)
 
     def test_missing_file_reports_and_exits_error(self):
         out = io.StringIO()
@@ -196,28 +212,37 @@ class JsonAliasFlagTests(unittest.TestCase):
         self.addCleanup(os.unlink, path)
         return path
 
-    def test_json_alias_produces_json_array_on_findings(self):
+    def test_json_alias_produces_wrapping_object_on_findings(self):
         path = self._write(BAD_REQS)
         out = io.StringIO()
         code = main([path, "--json"], stdout=out, stderr=io.StringIO())
         # BAD_REQS contains --trusted-host (REQ-A005 error) so rc==EXIT_ERROR.
         self.assertEqual(code, EXIT_ERROR)
         payload = json.loads(out.getvalue())
-        self.assertIsInstance(payload, list)
-        rules = {row["rule"] for row in payload}
+        self.assertIsInstance(payload, dict)
+        rules = {row["rule"] for row in payload["findings"]}
         self.assertIn("REQ-A005", rules)
 
-    def test_json_alias_clean_input_returns_zero_with_empty_array(self):
+    def test_json_alias_clean_input_returns_zero_with_empty_findings(self):
         path = self._write(OK_REQS)
         out = io.StringIO()
         code = main([path, "--json"], stdout=out, stderr=io.StringIO())
         self.assertEqual(code, EXIT_CLEAN)
-        # reqcheck's JSON shape is a single array (not envcheck's NDJSON);
-        # the shape-convergence work is a separate open backlog item, so
-        # this test locks the current shape honestly rather than papering
-        # over the divergence.
+        # Post-0.3.0: reqcheck now ships the lab-wide wrapping object. A
+        # convergence-aware CI consumer can still confirm the payload came
+        # from reqcheck even on a clean run, so we check `tool`/`version`
+        # alongside the empty findings list - this is the deliberate
+        # departure from the text-mode "zero bytes on clean stdout"
+        # discipline that envcheck locked 2026-10-23 for the same reason.
+        from reqcheck import __version__
         payload = json.loads(out.getvalue())
-        self.assertEqual(payload, [])
+        self.assertEqual(payload["tool"], "reqcheck")
+        self.assertEqual(payload["version"], __version__)
+        self.assertEqual(payload["source"], path)
+        self.assertEqual(payload["findings"], [])
+        self.assertEqual(payload["summary"]["total_findings"], 0)
+        self.assertEqual(payload["summary"]["files_scanned"], 1)
+        self.assertIsInstance(payload["summary"]["by_severity"], dict)
 
     def test_json_alias_output_matches_format_json_byte_for_byte(self):
         # The alias must be a faithful shortcut, not a parallel-but-diverging
