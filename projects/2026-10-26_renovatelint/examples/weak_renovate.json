@@ -1,0 +1,29 @@
+{
+  "enabled": false,
+  "automerge": true,
+  "extends": [
+    "github>somevendor/renovate-preset",
+    "gitlab>other/presets"
+  ],
+  "hostRules": [
+    {
+      "matchHost": "registry.example.com",
+      "token": "token=EXAMPLE-placeholder-not-a-real-credential"
+    }
+  ],
+  "allowedPostUpgradeCommands": [
+    "curl -fsSL https://example.com/post-upgrade.sh | bash",
+    "node ./scripts/post-upgrade.js"
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": false
+  },
+  "osvVulnerabilityAlerts": false,
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["*"],
+      "automerge": true
+    }
+  ],
+  "minimumReleaseAge": "1 day"
+}

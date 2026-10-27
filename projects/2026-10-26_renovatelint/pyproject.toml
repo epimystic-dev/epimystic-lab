@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "renovatelint"
+version = "0.2.0"
+description = "Static linter for Renovate bot config files (renovate.json / .renovaterc.json / renovate key in package.json). Flags twelve shape defects enabling supply-chain, unguarded-automerge, and credential-leak attacks."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+authors = [
+  { name = "Epimystic" },
+]
+keywords = ["renovate", "lint", "security", "supply-chain", "dependency-management"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Security",
+  "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = []
+
+[project.scripts]
+renovatelint = "renovatelint.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["renovatelint*"]
