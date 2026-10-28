@@ -46,7 +46,11 @@ class SubprocessInvocationTests(unittest.TestCase):
         _d, p = write_temp(build_doc([build_tool()]))
         r = _run(p)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        self.assertIn("healthy", r.stdout)
+        # rc=0 text output routes to stderr per docs/CONVENTIONS.md
+        # Stdout / stderr discipline; stdout stays empty so a `test -s`
+        # or `jq` wrapper reads nothing on a clean run.
+        self.assertEqual(r.stdout, "")
+        self.assertIn("healthy", r.stderr)
 
     def test_dirty_file_returns_two(self):
         _d, p = write_temp(build_doc([build_tool(

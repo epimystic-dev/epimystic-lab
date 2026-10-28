@@ -3,7 +3,7 @@
 Zero dependencies. Python 3.10+.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .rules import REGISTRY, Check, Rule
 from .types import Finding, Options, ScanResult, Severity, Verdict

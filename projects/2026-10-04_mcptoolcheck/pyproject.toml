@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcptoolcheck"
-version = "0.1.0"
+version = "0.2.0"
 description = "Static linter for MCP tool-descriptor files (tools/list snapshots, server-side manifests, generic tool-advertise JSON) - flags twelve shape defects that enable approval-view fidelity gaps and silent descriptor drift."
 readme = "README.md"
 license = { file = "LICENSE" }

@@ -42,9 +42,13 @@ class ArgparseTests(unittest.TestCase):
 class ExitCodeTests(unittest.TestCase):
     def test_healthy_input_returns_zero(self):
         d, p = write_temp(build_doc([build_tool()]))
-        rc, out, _err = run_cli([p])
+        rc, out, err = run_cli([p])
         self.assertEqual(rc, 0)
-        self.assertIn("healthy", out)
+        # Per docs/CONVENTIONS.md Stdout / stderr discipline: a rc=0
+        # text-mode run produces zero bytes on stdout; the verdict
+        # summary routes to stderr.
+        self.assertEqual(out, "")
+        self.assertIn("healthy", err)
 
     def test_unhealthy_input_returns_two(self):
         d, p = write_temp(build_doc([build_tool(
@@ -92,9 +96,13 @@ class ExitCodeTests(unittest.TestCase):
     def test_include_info_shows_info_without_promoting(self):
         tool = build_tool(description="")
         d, p = write_temp(build_doc([tool]))
-        rc, out, _err = run_cli([p, "--include-info"])
+        rc, out, err = run_cli([p, "--include-info"])
         self.assertEqual(rc, 0)
-        self.assertIn("MTC-012", out)
+        # rc=0 (INFO-only) text output routes to stderr per
+        # docs/CONVENTIONS.md Stdout / stderr discipline; findings
+        # anchored on stderr in that case.
+        self.assertEqual(out, "")
+        self.assertIn("MTC-012", err)
 
 
 class MissingFileTests(unittest.TestCase):

@@ -80,11 +80,28 @@ def main(
         only=tuple(args.only),
     )
     result = scan_paths(args.paths, options)
+    rc = exit_code(result.verdict, options)
     if args.json:
         write_json(result, stdout)
     else:
-        write_text(result, stdout)
-    return exit_code(result.verdict, options)
+        # docs/CONVENTIONS.md Stdout / stderr discipline: a silent rc=0
+        # text-mode run must produce zero bytes on stdout so downstream
+        # jq / test -s / | head CI wrappers piping the tool's stdout can
+        # rely on empty stdout meaning "nothing to look at". mcptoolcheck
+        # follows Convention B (severity-tiered), so rc=0 means verdict
+        # healthy with no HIGH / MEDIUM finding (and no --strict
+        # escalation); the one-line verdict / counts summary is diagnostic
+        # prose in that case and routes to stderr. On non-zero rc the
+        # finding block carries actionable rule-id output and stays on
+        # stdout so consumers that scrape stdout for MTC-* codes are
+        # unchanged. write_text() is unchanged and remains the public
+        # formatter; the routing decision lives in the CLI so a caller
+        # that imports it directly still gets a self-contained report.
+        if rc == 0:
+            write_text(result, stderr)
+        else:
+            write_text(result, stdout)
+    return rc
 
 
 __all__ = ["main"]
