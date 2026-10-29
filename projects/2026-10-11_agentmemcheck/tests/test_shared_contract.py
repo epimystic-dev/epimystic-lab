@@ -92,6 +92,27 @@ class SharedContractInvariants(unittest.TestCase):
         self.assertTrue(os.path.isfile(path))
         r = _run(path)
         self.assertEqual(r.returncode, 0, r.stderr)
+        # Lock docs/CONVENTIONS.md Stdout / stderr discipline: a rc=0
+        # text-mode run must produce zero bytes on stdout so a `jq` /
+        # `test -s` / `| head` CI wrapper piping the tool's stdout can
+        # rely on empty stdout meaning "nothing to look at". The
+        # one-line verdict / counts summary must land on stderr, not
+        # stdout. --json mode is exempt (JSON output goes to stdout
+        # regardless of rc); the JSON path is exercised by test_cli.py.
+        self.assertEqual(
+            r.stdout,
+            "",
+            "agentmemcheck emitted bytes on stdout for a rc=0 text-mode "
+            "run; docs/CONVENTIONS.md Stdout / stderr discipline requires "
+            "the verdict summary to route to stderr. stdout was: "
+            + repr(r.stdout),
+        )
+        self.assertIn(
+            "healthy",
+            r.stderr,
+            "expected the verdict line on stderr for a rc=0 text-mode "
+            "run; stderr was: " + repr(r.stderr),
+        )
 
     def test_known_dirty_input_returns_nonzero(self):
         # AMC-001 fires deterministically on the TAG character embedded

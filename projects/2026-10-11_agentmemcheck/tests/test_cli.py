@@ -32,9 +32,13 @@ class CLIScanTests(unittest.TestCase):
     def test_clean_file_rc_zero(self):
         d, p = write_temp(build_store([build_entry()]))
         try:
-            rc, out, _err = run_cli([p])
-            self.assertEqual(rc, 0, out)
-            self.assertIn("healthy", out)
+            rc, out, err = run_cli([p])
+            self.assertEqual(rc, 0, err)
+            # docs/CONVENTIONS.md Stdout / stderr discipline (0.2.0):
+            # rc=0 text-mode runs route the verdict summary to stderr
+            # so a `jq` / `test -s` wrapper piping stdout sees nothing.
+            self.assertEqual(out, "")
+            self.assertIn("healthy", err)
         finally:
             shutil.rmtree(d, ignore_errors=True)
 
