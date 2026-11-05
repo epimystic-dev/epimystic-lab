@@ -8,7 +8,7 @@ names the divergences that a future convergence pass will close.
 Tools in scope: `jsonlcheck`, `envcheck`, `jwtcheck`, `reqcheck`, `licensechain`,
 `aicontribcheck`, `skillcheck`, `agentmdlint`, `oraclecheck`, `elevatescan`,
 `delegcheck`, `mcpservercheck`, `nbshape`, `sarifcheck`, `pjhookcheck`,
-`approvchainlint`, `mcptoolcheck`, `agentmemcheck`. `seedline` is a library (no CLI); `jsonldiff`
+`approvchainlint`, `mcptoolcheck`, `agentmemcheck`, `devcontainercheck`. `seedline` is a library (no CLI); `jsonldiff`
 and `jsonlsample` are data-transformation tools rather than linters and follow
 only the invocation and stdout/stderr rules below.
 
@@ -28,9 +28,9 @@ Every linter is invokable as `python -m <tool>`, with `argparse`-style flags. Th
 severity filter). `rc != 0` iff the tool has something the CI job should notice -
 findings, unreadable input, or an internal error. A CI script that only cares
 "did anything worth attention happen" can rely on `test $? -eq 0` uniformly across
-all eighteen tools.
+all nineteen tools.
 
-Evidence (rows 1-7 run 2026-08-11; rows 8-9 run 2026-09-02; row 10 run 2026-09-04; row 11 run 2026-09-11; row 12 run 2026-09-16; rows 13-14 run 2026-09-19; row 15 run 2026-10-30; row 16 run 2026-10-31; row 17 run 2026-11-03; row 18 run 2026-11-04):
+Evidence (rows 1-7 run 2026-08-11; rows 8-9 run 2026-09-02; row 10 run 2026-09-04; row 11 run 2026-09-11; row 12 run 2026-09-16; rows 13-14 run 2026-09-19; row 15 run 2026-10-30; row 16 run 2026-10-31; row 17 run 2026-11-03; row 18 run 2026-11-04; row 19 run 2026-11-05):
 
 | Tool           | Clean input command                                       | Findings command                                        | Clean rc | Findings rc |
 |----------------|-----------------------------------------------------------|---------------------------------------------------------|----------|-------------|
@@ -52,6 +52,7 @@ Evidence (rows 1-7 run 2026-08-11; rows 8-9 run 2026-09-02; row 10 run 2026-09-0
 | approvchainlint| `python -m approvchainlint examples/healthy_config.json`  | `python -m approvchainlint examples/weak_config.json`   | 0        | 2           |
 | mcptoolcheck   | `python -m mcptoolcheck examples/healthy_tooldesc.json`   | `python -m mcptoolcheck examples/weak_tooldesc.json`    | 0        | 2           |
 | agentmemcheck  | `python -m agentmemcheck examples/healthy_memstore.json`  | `python -m agentmemcheck examples/weak_memstore.json`   | 0        | 2           |
+| devcontainercheck | `python -m devcontainercheck examples/healthy_devcontainer.json` | `python -m devcontainercheck examples/weak_devcontainer.json` | 0  | 2           |
 
 *`aicontribcheck` and `skillcheck` return `1` on a "clean" run against most inputs
 because their exit codes encode a *verdict* (allowed / unknown / banned or
@@ -59,16 +60,16 @@ safe / unknown / unsafe) rather than a finding count - a caller wanting a strict
 `0` requires an explicit allowed/safe verdict from the tool. This is a deliberate
 verdict-based encoding, not a divergence to fix.
 
-The last eleven rows also encode a verdict rollup (`healthy` / `needs-attention` /
+The last twelve rows also encode a verdict rollup (`healthy` / `needs-attention` /
 `unhealthy`), but the rollup is derived from severity so their clean-input rc is
 `0`. See the Convention B entry below for the shared severity mapping.
 
 Each row's "Findings command" is additionally locked by `tests/test_shared_contract.py`
 inside the tool: help returns rc 0, the clean command returns rc 0 (with the
 `aicontribcheck` / `skillcheck` verdict caveat), and the findings command returns
-non-zero. All eighteen tests further assert a tool-specific anchor beyond bare rc so
+non-zero. All nineteen tests further assert a tool-specific anchor beyond bare rc so
 a false-pass from an unrelated non-zero rc (a missing `__main__.py`, an argparse
-rejection of an unknown flag) cannot pass by accident. Seventeen anchor a
+rejection of an unknown flag) cannot pass by accident. Eighteen anchor a
 tool-specific rule code on stdout; `jsonlcheck` anchors the offending filename
 on stderr (its stdout is empty on the findings run so the stderr diagnostic is
 the shape available to lock):
@@ -92,6 +93,7 @@ the shape available to lock):
 | approvchainlint| `AC-001` on stdout                                       |
 | mcptoolcheck   | `MTC-001` on stdout                                      |
 | agentmemcheck  | `AMC-001` on stdout                                      |
+| devcontainercheck | `DC-001` on stdout                                    |
 | jsonlcheck     | `bad.jsonl` on stderr (filename anchor, not a rule code) |
 
 Read the anchor column as a "the tool actually ran" witness paired with the
@@ -108,7 +110,7 @@ Tools split between two conventions when a finding is present:
   OR unrecoverable IO. Followed by `jwtcheck`, `reqcheck`, `licensechain`,
   `agentmdlint`, `oraclecheck`, `elevatescan`, `delegcheck`, `mcpservercheck`,
   `nbshape`, `sarifcheck`, `pjhookcheck`, `approvchainlint`, `mcptoolcheck`,
-  `agentmemcheck`. The last eleven roll findings into an explicit verdict
+  `agentmemcheck`, `devcontainercheck`. The last twelve roll findings into an explicit verdict
   (`healthy` / `needs-attention` / `unhealthy`) whose rc mapping is `0 / 1 / 2` -
   a verdict wrapper over the same severity tiers, not a separate convention.
 - **Convention C - verdict-based.** `rc` reflects a policy verdict rather than
@@ -124,13 +126,14 @@ release rather than as silent drift.
 
 ### `--strict`
 
-Fifteen of the eighteen linters expose `--strict`, though the semantic differs
+Sixteen of the nineteen linters expose `--strict`, though the semantic differs
 across three families. `jwtcheck` exposes an equivalent knob via
 `--severity error`. `jsonlcheck` and `envcheck` do not expose `--strict`; a
 finding is a finding under their severity-blind exit code (Convention A).
 
 Evidence (rows 1-8 run 2026-09-12; row 9 run 2026-09-16; rows 10-11 run 2026-09-19;
 row 12 run 2026-10-30; row 13 run 2026-10-31; row 14 run 2026-11-03; row 15 run 2026-11-04;
+row 16 run 2026-11-05;
 `--strict` behaviour quoted verbatim from each tool's `python -m <tool> --help`
 output):
 
@@ -151,16 +154,18 @@ output):
 | approvchainlint| verdict-rollup      | escalate INFO findings to unhealthy; no files scanned becomes rc 2 |
 | mcptoolcheck   | verdict-rollup      | surface INFO rules and treat INFO-only outcomes as needs-attention |
 | agentmemcheck  | verdict-rollup      | surface INFO rules and treat INFO-only outcomes as needs-attention |
+| devcontainercheck | verdict-rollup   | surface INFO rules and treat INFO-only outcomes as needs-attention |
 
 The severity-tiered pair (`reqcheck`, `licensechain`) escalate warnings; the
 verdict-based pair (`aicontribcheck`, `skillcheck`) escalate an `unknown`
-verdict; the eleven verdict-rollup tools (`agentmdlint`, `oraclecheck`,
+verdict; the twelve verdict-rollup tools (`agentmdlint`, `oraclecheck`,
 `elevatescan`, `delegcheck`, `mcpservercheck`, `nbshape`, `sarifcheck`,
-`pjhookcheck`, `approvchainlint`, `mcptoolcheck`, `agentmemcheck`) escalate INFO
-findings and the no-input case. `pjhookcheck` and `approvchainlint` sit at the
-stricter end of that family: under `--strict`, INFO escalates to `unhealthy`
-(rc 2) rather than the `needs-attention` (rc 1) that `elevatescan`,
-`delegcheck`, `mcpservercheck`, `mcptoolcheck`, and `agentmemcheck` adopt.
+`pjhookcheck`, `approvchainlint`, `mcptoolcheck`, `agentmemcheck`,
+`devcontainercheck`) escalate INFO findings and the no-input case.
+`pjhookcheck` and `approvchainlint` sit at the stricter end of that family:
+under `--strict`, INFO escalates to `unhealthy` (rc 2) rather than the
+`needs-attention` (rc 1) that `elevatescan`, `delegcheck`, `mcpservercheck`,
+`mcptoolcheck`, `agentmemcheck`, and `devcontainercheck` adopt.
 Callers relying on `--strict` should read the per-tool `--help` to know which of
 the three the flag maps to.
 
@@ -180,8 +185,8 @@ name is now unified: all three severity-tiered linters (`envcheck` 2026-08-13,
 (2026-08-31), `delegcheck` (2026-09-06), `mcpservercheck` (2026-09-13),
 `nbshape` (2026-09-18), `sarifcheck` (2026-09-18), `pjhookcheck`
 (2026-09-20), `approvchainlint` (2026-09-27), `mcptoolcheck`
-(2026-10-04), and `agentmemcheck` (2026-10-11). Shape convergence
-remains the next open target.
+(2026-10-04), `agentmemcheck` (2026-10-11), and `devcontainercheck`
+(2026-10-18). Shape convergence remains the next open target.
 
 | Tool           | Flag                | Top-level JSON shape                                          |
 |----------------|---------------------|---------------------------------------------------------------|
@@ -203,6 +208,7 @@ remains the next open target.
 | approvchainlint| `--json`            | JSON object: full report (`tool`, `version`, `verdict`, `files_scanned`, `findings`, `summary`, `errors`) |
 | mcptoolcheck   | `--json`            | JSON object: full report (`verdict`, `files_scanned`, `tools_scanned`, `findings`, `error`) |
 | agentmemcheck  | `--json`            | JSON object: full report (`verdict`, `files_scanned`, `entries_scanned`, `findings`, `error`) |
+| devcontainercheck | `--json`         | JSON object: full report (`tool`, `version`, `verdict`, `files_scanned`, `findings`, `error`) |
 
 Consumers should pin the tool version and pin the shape they parse. The next
 convergence pass is expected to standardise on `--json` (boolean) and a wrapping
@@ -224,9 +230,9 @@ required_attributions, tools_named, summary}` (with findings only reachable
 by walking `files[].findings`), 0.3.0 adds `tool`, `version`, `source`, and a
 flat top-level `findings` list; every pre-0.3.0 key retained; the same
 `test_json_mode_top_level_shape` shared-contract invariant locks both
-directions. `agentmdlint` and `sarifcheck` already ship a top-level
-`{tool, version, ...}` pair (from their first publication) and remain
-compliant on that axis. The remaining severity-based linters (`envcheck`
+directions. `agentmdlint`, `sarifcheck`, and `devcontainercheck` already
+ship a top-level `{tool, version, ...}` pair (from their first
+publication) and remain compliant on that axis. The remaining severity-based linters (`envcheck`
 NDJSON, `jwtcheck` JSON array, `reqcheck` JSON array, `skillcheck`,
 `oraclecheck`, `elevatescan`, `delegcheck`, `mcpservercheck`, `nbshape`,
 `mcptoolcheck`, `agentmemcheck`) still diverge on shape; each is a separate
@@ -286,15 +292,16 @@ record that drove the campaign.
 
 ## `--version`
 
-Present on all eighteen linters (`jsonlcheck`, `envcheck`, `jwtcheck`, `reqcheck`,
+Present on all nineteen linters (`jsonlcheck`, `envcheck`, `jwtcheck`, `reqcheck`,
 `licensechain`, `aicontribcheck`, `skillcheck`, `agentmdlint`, `oraclecheck`,
 `elevatescan`, `delegcheck`, `mcpservercheck`, `nbshape`, `sarifcheck`,
-`pjhookcheck`, `approvchainlint`, `mcptoolcheck`, `agentmemcheck`) and prints
+`pjhookcheck`, `approvchainlint`, `mcptoolcheck`, `agentmemcheck`,
+`devcontainercheck`) and prints
 `<tool> <version>` then exits `0`. The `envcheck` and `reqcheck` additions landed
 2026-08-12 and closed the earlier parity gap; `agentmdlint`, `oraclecheck`,
 `elevatescan`, `delegcheck`, `mcpservercheck`, `nbshape`, `sarifcheck`,
-`pjhookcheck`, `approvchainlint`, `mcptoolcheck`, and `agentmemcheck` shipped
-`--version` from their first published release.
+`pjhookcheck`, `approvchainlint`, `mcptoolcheck`, `agentmemcheck`, and
+`devcontainercheck` shipped `--version` from their first published release.
 
 ## Input encoding
 
@@ -328,13 +335,15 @@ On the maintenance backlog:
 - ~~Add a per-tool test asserting the shared-invariants section above.~~ Done
   2026-09-18 for the first fourteen linters and extended to `pjhookcheck`
   on first publication 2026-09-20, `approvchainlint` on first publication
-  2026-09-27, `mcptoolcheck` on first publication 2026-10-04, and
-  `agentmemcheck` on first publication 2026-10-11: all
-  eighteen linters carry `tests/test_shared_contract.py` locking the
+  2026-09-27, `mcptoolcheck` on first publication 2026-10-04,
+  `agentmemcheck` on first publication 2026-10-11, and
+  `devcontainercheck` on first publication 2026-10-18: all
+  nineteen linters carry `tests/test_shared_contract.py` locking the
   three invariants (jsonlcheck / envcheck / jwtcheck / reqcheck /
   licensechain / aicontribcheck / skillcheck across
   2026-08-19..2026-08-27; `agentmdlint` 2026-08-29; `oraclecheck`
   2026-09-01; `elevatescan` 2026-09-03; `delegcheck` 2026-09-09;
   `mcpservercheck` 2026-09-15; `nbshape` 2026-09-18; `sarifcheck`
   2026-09-18; `pjhookcheck` 2026-09-20; `approvchainlint` 2026-09-27;
-  `mcptoolcheck` 2026-10-04; `agentmemcheck` 2026-10-11).
+  `mcptoolcheck` 2026-10-04; `agentmemcheck` 2026-10-11;
+  `devcontainercheck` 2026-10-18).
